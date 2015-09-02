@@ -1,0 +1,34 @@
+{
+	"setup-wizard": {
+		"description": "Permissions to allow setup-wizard to work properly",
+		"read": {
+			"ubus": {
+				"file": [
+					"stat"
+				],
+				"onion": [
+					"wifi-scan",
+					"oupgrade",
+					"wifi-setup"
+				],
+				"system": [
+					"info"
+				],
+				"uci": [
+					"rpcd"
+				]
+			}
+		},
+		"write": {
+			"ubus": {
+				"onion": [
+					"wifi-setup",
+					"oupgrade"
+				],
+				"uci": [
+					"rpcd"
+				]
+			}
+		}
+	}
+}
