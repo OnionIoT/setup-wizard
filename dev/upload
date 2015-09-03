@@ -1,3 +1,0 @@
-#!/bin/bash
-
-rsync --progress --delete -rv ./src/* root@192.168.3.1:/www

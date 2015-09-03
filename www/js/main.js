@@ -95,6 +95,15 @@
 		});
 	});
 
+	$('#login-username').keypress(function (e) {
+		if (e.which === 13) {
+			e.preventDefault();
+			$('#login-password').focus();
+
+			return false;
+		}
+	});
+
 
 	//======================
 	// Step 2: Setup Wi-Fi
