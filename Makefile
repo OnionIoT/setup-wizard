@@ -1,4 +1,4 @@
 all: nothing
 
 nothing:
-    @echo nothing
+	@echo nothing
