@@ -363,7 +363,7 @@
 				else {
 					// No need to upgrade
 					console.log("No upgrade required");
-					$('#update-download').hide();
+					$('#steps').children().eq(2).hide();	//little hacky
 					binDownloaded = true;
 				}
 
