@@ -104,13 +104,21 @@
 
 		        	<!-- Step 4: Finished! -->
 		        	<div>
-		        		<div class="loading"></div>
-		        		<div class="alert alert-success m-t-lg" role="alert">
-							<p class="text-center"><strong>You have successfully set up your Omega!</strong></p>
-							<p>Please be patient while the Omega updates and finalizes configuration. Once completed, the Omega will reboot automatically. You can now safely exit the Setup Wizard.</p>
+		        		<div id="upgrade-required">
+			        		<div class="loading"></div>
+			        		<div class="alert alert-success m-t-lg" role="alert">
+								<p class="text-center"><strong>You have successfully set up your Omega!</strong></p>
+								<p>Please be patient while the Omega updates and finalizes configuration. Once completed, the Omega will reboot automatically. You can now safely exit the Setup Wizard.</p>
+							</div>
+							<div class="alert alert-warning" role="alert">
+								<p class="text-center"><strong>Warning: Do not power off the device during update.</strong></p>
+							</div>
 						</div>
-						<div class="alert alert-warning" role="alert">
-							<p><strong>Warning: Do not power off the device during update.</strong></p>
+						<div id="upgrade-not-required">
+							<div class="alert alert-success m-t-lg" role="alert">
+								<p class="text-center"><strong>You have successfully set up your Omega!</strong></p>
+								<p class="text-center">You can now safely exit the Setup Wizard.</p>
+							</div>
 						</div>
 		        	</div>
 		        </div>

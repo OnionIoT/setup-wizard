@@ -200,7 +200,7 @@
 			$('#wifi-encryption').val('psk2');
 		} else if (network.encryption.indexOf('WPA') !== -1) {
 			$('#wifi-encryption').val('psk');
-		} else if (network.encryption.indexOf('WPA') !== -1) {
+		} else if (network.encryption.indexOf('WEP') !== -1) {
 			$('#wifi-encryption').val('wep');
 		}
 	});
@@ -236,6 +236,7 @@
 						}
 					}, function (data) {
 						binName = data.result[1].image.local;
+						upgradeRequired = data.result[1].upgrade;
 						postCheck();
 						gotoStep(2);
 					});
@@ -271,24 +272,33 @@
 	//======================
 
 	var binName,
-		binDownloaded = false;
+		binDownloaded = false,
+		upgradeRequired = false;
 
 	var checkDownload = function () {
-		var checkDownloadInterval = setInterval(function () {
-			sendUbusRequest('file', 'stat', {
-				path: binName
-			}, function (data) {
-				if (data && data.result.length === 2) {
-					$('#download-progress').prop('value', data.result[1].size);
+		if (!binDownloaded) {
+			var checkDownloadInterval = setInterval(function () {
+				sendUbusRequest('file', 'stat', {
+					path: binName
+				}, function (data) {
+					if (data && data.result.length === 2) {
+						$('#download-progress').prop('value', data.result[1].size);
 
-					if (data.result[1].size === 16252928) {
-						binDownloaded = true;
-						clearInterval(checkDownloadInterval);
-						gotoStep(3);
+						if (data.result[1].size === 16252928) {
+							binDownloaded = true;
+							clearInterval(checkDownloadInterval);
+							gotoStep(3);
+						}
 					}
-				}
-			});
-		}, 1000);
+				});
+			}, 1000);
+		}
+		else {
+			// no upgrade download required
+			setTimeout(function(){
+				gotoStep(3);
+			},1000);
+		}
 	};
 
 
@@ -340,12 +350,20 @@
 				$('#download-progress').prop('value', 0);
 				binDownloaded = false;
 
-				// Actually start the upgrade!
-				sendUbusRequest('onion', 'oupgrade', {
-					params: {
-						force: ''
-					}
-				});
+				if (upgradeRequired === 'true') {
+					// Actually start the upgrade!
+					console.log("Upgrading");
+					sendUbusRequest('onion', 'oupgrade', {
+						params: {
+							force: ''
+						}
+					});
+				}
+				else {
+					// No need to upgrade
+					console.log("No upgrade required");
+					binDownloaded = true;
+				}
 
 				checkDownload();
 			}
@@ -355,7 +373,13 @@
 				return binDownloaded;
 			},
 			init: function () {
-
+				if (upgradeRequired === 'true') {
+					$('#upgrade-not-required').hide();
+					$('#upgrade-required').show();
+				} else {
+					$('#upgrade-required').hide();
+					$('#upgrade-not-required').show();
+				}
 			}
 		}
 	];
