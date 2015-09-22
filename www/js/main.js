@@ -230,6 +230,7 @@
 					clearInterval(connectionCheckInterval);
 
 					// Initiate firmware upgrade
+					console.log("Checking for upgrade");
 					sendUbusRequest('onion', 'oupgrade', {
 						params: {
 							check: ''
@@ -362,6 +363,7 @@
 				else {
 					// No need to upgrade
 					console.log("No upgrade required");
+					$('#update-download').hide();
 					binDownloaded = true;
 				}
 
