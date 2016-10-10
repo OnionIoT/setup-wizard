@@ -173,7 +173,7 @@
 					
 					showScanMessage('Choose Wi-Fi Network:');
 
-					for (let i = 0; i < availableWifiNetworks.length; i++) {
+					for (var i = 0; i < availableWifiNetworks.length; i++) {
 						if (availableWifiNetworks[i].ssid) {
 							$('#wifi-select').append($('<option value="' + i + '">' + availableWifiNetworks[i].ssid + '</option>'));
 						}
@@ -393,7 +393,7 @@
 			var indicators = $('#steps-indicator').children(),
 				controls = $('#steps').children();
 
-			for (let i = 0; i < indicators.length; i++) {
+			for (var i = 0; i < indicators.length; i++) {
 				if (i <= step) {
 					$(indicators[i]).addClass('completed');
 				} else {
