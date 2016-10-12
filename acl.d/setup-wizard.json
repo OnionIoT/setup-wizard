@@ -4,7 +4,7 @@
 		"read": {
 			"ubus": {
 				"file": [
-					"stat"
+					"*"
 				],
 				"onion": [
 					"wifi-scan",
@@ -15,20 +15,45 @@
 					"info"
 				],
 				"uci": [
-					"rpcd"
+					"*"
 				]
-			}
+			},
+        	"uci": [
+		        "get",
+		        "delete",
+		        "rpcd",
+		        "system",
+		        "wireless",
+		        "network",
+		        "onion",
+		        "mjpg-streamer"
+			]
 		},
 		"write": {
 			"ubus": {
+				"file":[
+					"*"
+				],
 				"onion": [
 					"wifi-setup",
 					"oupgrade"
 				],
 				"uci": [
-					"rpcd"
+					"*"
 				]
-			}
+			},
+			"uci": [
+                "get",
+                "set",
+                "commit",
+                "delete",
+                "rpcd",
+                "system",
+                "wireless",
+                "network",
+                "onion",
+                "mjpg-streamer"
+			]
 		}
 	}
 }

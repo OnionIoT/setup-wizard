@@ -77,6 +77,7 @@
 			username: $('#login-username').val(),
 			password: $('#login-password').val()
 		}, function (data) {
+			console.log(data);
 			if (data && data.error) {
 				showLoginMessage(data.error.message);
 
@@ -268,9 +269,61 @@
 	});
 
 
+	// ==================
+	// Step 3: Cloud Registration
+	//===================
+	$('#setupCloudButton').click(function(){
+
+
+		//Open the window.
+
+		//Check if deviceId is present.
+
+		// Move to next page
+
+		
+		var win = window.open("https://google.com");
+
+		sendUbusRequest('file','exec',{command:'/etc/init.d/device-client', params:["restart"]},function(){
+			console.log("No output from restarting the device-client");
+			sendUbusRequest('uci','get',{config:"onion",section:"cloud",option:"deviceId"}, function(response){
+				console.log(response);
+				if((response.result[1].value != '') && (response.result[1].value != undefined)) {
+					console.log("deviceId",response.result[1].value);
+					console.log("deviceId found, cloudSetup successful");
+					gotoStep(3);
+				} else{
+					console.log("Cloud Setup Failed");
+					gotoStep(3);
+				}
+			});
+		});
+	});
+
+	$('skipCloudReg').click(function(){
+		gotoStep(3);
+	})
+
 	//======================
-	// Step 3: Upgrade
+	// Step 4: Firmware Update
 	//======================
+
+
+	var getCodeName = function(){
+		return 'codeName';
+	};
+
+	var getModel = function(){
+		sendUbusRequest('system','board',{},function(response){
+			console.log(response);
+		});
+	}
+
+	var getFirmware = function(){
+		sendUbusRequest('onion','oupgrade')
+		ubus call onion oupgrade '{"params":{"check":""}}'
+	}
+
 
 	var binName,
 		binDownloaded = false,
@@ -288,7 +341,7 @@
 						if (data.result[1].size === 16252928) {
 							binDownloaded = true;
 							clearInterval(checkDownloadInterval);
-							gotoStep(3);
+							gotoStep(4);
 						}
 					}
 				});
@@ -297,10 +350,11 @@
 		else {
 			// no upgrade download required
 			setTimeout(function(){
-				gotoStep(3);
+				gotoStep(4);
 			},1000);
 		}
 	};
+
 
 
 	//======================
@@ -343,31 +397,48 @@
 			}
 		},
 		{
+			ready: function(){
+				console.log("Ready Function for the cloud registration step gets called here");
+			},
+			init: function(){
+				console.log("init function for tjhe cloud registration step gets called here ");
+				//Run a function to see if the device is setup with the cloud.
+				//If it is not, grey out the setupCloud Button and make it not clickable
+				//If it is, change its color.
+			}
+
+		},
+		{
 			ready: function () {
 				return omegaOnline;
 				// return true;
 			},
 			init: function () {
-				$('#download-progress').prop('value', 0);
-				binDownloaded = false;
 
-				if (upgradeRequired === 'true') {
-					// Actually start the upgrade!
-					console.log("Upgrading");
-					sendUbusRequest('onion', 'oupgrade', {
-						params: {
-							force: ''
-						}
-					});
-				}
-				else {
-					// No need to upgrade
-					console.log("No upgrade required");
-					$('#steps').children().eq(2).hide();	//little hacky
-					binDownloaded = true;
-				}
 
-				checkDownload();
+				//Populate the codeName, Model 
+
+
+				// $('#download-progress').prop('value', 0);
+				// binDownloaded = false;
+
+				// if (upgradeRequired === 'true') {
+				// 	// Actually start the upgrade!
+				// 	console.log("Upgrading");
+				// 	sendUbusRequest('onion', 'oupgrade', {
+				// 		params: {
+				// 			force: ''
+				// 		}
+				// 	});
+				// }
+				// else {
+				// 	// No need to upgrade
+				// 	console.log("No upgrade required");
+				// 	$('#steps').children().eq(2).hide();	//little hacky
+				// 	binDownloaded = true;
+				// }
+
+				// checkDownload();
 			}
 		},
 		{

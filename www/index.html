@@ -19,6 +19,7 @@
 				<ul id="steps-indicator"  class="m-b-lg">
 		            <li>Login to Omega</li>
 		            <li>Setup Wi-Fi</li>
+		            <li>Cloud Registration</li>
 		            <li>Software Upgrade</li>
 		            <li>Done!</li>
 		        </ul>
@@ -96,13 +97,47 @@
 						</form>
 		        	</div>
 
-		        	<!-- Step 3: Software Updates -->
+		        	<!-- Step 3: Setup the cloud here -->
+
 		        	<div>
-		        		<h3 class="m-b-md">Downloading Updates</h3>
-		        		<progress id="download-progress" class="progress progress-striped progress-animated" value="0" max="16252928"></progress>
+		        		<p>Some Text Should go here</p>
+		        		<div class='horizontal layout center-center'>
+			        		<button id="skipCloudReg" type="button" class="btn btn-success btn-block">Skip Step</button>
+			        		<button id="setupCloudButton" type="button" class="btn btn-success btn-block">Setup Cloud</button>
+		        		</div>
 		        	</div>
 
-		        	<!-- Step 4: Finished! -->
+
+		        	<!-- Step 4: Software Updates -->
+		        	<div>
+		        		<h3 class="m-b-md">Firmware Update</h3>
+		        		<table class="table">
+		        			<tbody>
+		        				<tr>
+		        					<th scope="row">Codename</th>
+		        					<td id='codeName'> Hardcoded Name</td>
+		        				</tr>
+		        				<tr>
+		        					<th scope="row">Model</th>
+		        					<td id='model'> Hardcoded Name</td>
+		        				</tr>
+		        				<tr>
+		        					<th scope="row">Firmware</th>
+		        					<td id='firmware'> Hardcoded Name</td>
+		        				</tr>
+		        				<tr>
+		        					<th scope="row">Latest Firmware</th>
+		        					<td id='latestFirmware'> Hardcoded Name</td>
+		        				</tr>
+
+		        			</tbody>
+		        		</table>
+		        		<button id="upgradeFirmwareButton" type="button" class="btn btn-success btn-block">Upgrade Firmware</button>
+		        		<progress id="download-progress" class="progress progress-striped progress-animated" value="0" max="16252928"></progress>
+		        		
+		        	</div>
+
+		        	<!-- Step 5: Finished! -->
 		        	<div>
 		        		<div id="upgrade-required">
 			        		<div class="loading"></div>
@@ -129,5 +164,7 @@
 		<script src="/js/jquery.storage.js"></script>
 		<script src="/js/bootstrap.js"></script>
 		<script src="/js/main.js"></script>
+		<script src="/js/ubus.js"></script>
+		<script src="/js/cloud.js"></script>
 	</body>
 </html>
