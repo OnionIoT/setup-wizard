@@ -100,7 +100,9 @@
 		        	<!-- Step 3: Setup the cloud here -->
 
 		        	<div>
+		        		<div id="cloudLoading" class="loading"></div>
 		        		<p>Some Text Should go here</p>
+						<div id="cloudRegMessage"></div>
 		        		<div class='horizontal layout center-center'>
 			        		<button id="skipCloudReg" type="button" class="btn btn-success btn-block">Skip Step</button>
 			        		<button id="setupCloudButton" type="button" class="btn btn-success btn-block">Setup Cloud</button>
@@ -111,27 +113,10 @@
 		        	<!-- Step 4: Software Updates -->
 		        	<div>
 		        		<h3 class="m-b-md">Firmware Update</h3>
-		        		<table class="table">
-		        			<tbody>
-		        				<tr>
-		        					<th scope="row">Codename</th>
-		        					<td id='codeName'> Hardcoded Name</td>
-		        				</tr>
-		        				<tr>
-		        					<th scope="row">Model</th>
-		        					<td id='model'> Hardcoded Name</td>
-		        				</tr>
-		        				<tr>
-		        					<th scope="row">Firmware</th>
-		        					<td id='firmware'> Hardcoded Name</td>
-		        				</tr>
-		        				<tr>
-		        					<th scope="row">Latest Firmware</th>
-		        					<td id='latestFirmware'> Hardcoded Name</td>
-		        				</tr>
-
-		        			</tbody>
-		        		</table>
+		        		<p>Some Text Goes Here</p>
+		        		<div style="text-align:center;">
+		        			Install Console<input type="checkbox" name="console" id="consoleInstall" value="Console" style="margin-left:5px;" checked><br>
+		        		</div>
 		        		<button id="upgradeFirmwareButton" type="button" class="btn btn-success btn-block">Upgrade Firmware</button>
 		        		<progress id="download-progress" class="progress progress-striped progress-animated" value="0" max="16252928"></progress>
 		        		
@@ -164,7 +149,5 @@
 		<script src="/js/jquery.storage.js"></script>
 		<script src="/js/bootstrap.js"></script>
 		<script src="/js/main.js"></script>
-		<script src="/js/ubus.js"></script>
-		<script src="/js/cloud.js"></script>
 	</body>
 </html>

@@ -273,56 +273,33 @@
 	// Step 3: Cloud Registration
 	//===================
 	$('#setupCloudButton').click(function(){
-
-
 		//Open the window.
-
-		//Check if deviceId is present.
-
-		// Move to next page
-
-		
 		var win = window.open("https://google.com");
-
-		sendUbusRequest('file','exec',{command:'/etc/init.d/device-client', params:["restart"]},function(){
-			console.log("No output from restarting the device-client");
-			sendUbusRequest('uci','get',{config:"onion",section:"cloud",option:"deviceId"}, function(response){
-				console.log(response);
-				if((response.result[1].value != '') && (response.result[1].value != undefined)) {
-					console.log("deviceId",response.result[1].value);
-					console.log("deviceId found, cloudSetup successful");
-					gotoStep(3);
-				} else{
-					console.log("Cloud Setup Failed");
-					gotoStep(3);
-				}
-			});
-		});
+		// steps[3].init();
+		gotoStep(3)
 	});
 
-	$('skipCloudReg').click(function(){
+	$('#skipCloudReg').click(function(){
+		// steps[3].init();
 		gotoStep(3);
 	})
+
+	var showCloudRegMessage = function (message) {
+		$('#cloudRegMessage').append($('<div class="alert alert-warning alert-dismissible fade in" role="alert"> \
+			<button type="button" class="close" data-dismiss="alert" aria-label="Close"> \
+				<span aria-hidden="true">&times;</span> \
+				<span class="sr-only">Close</span> \
+			</button> \
+			<strong>Error:</strong> ' + message + ' \
+		</div>'));
+	};
 
 	//======================
 	// Step 4: Firmware Update
 	//======================
+	var bFirmwareUpdated = true;
 
-
-	var getCodeName = function(){
-		return 'codeName';
-	};
-
-	var getModel = function(){
-		sendUbusRequest('system','board',{},function(response){
-			console.log(response);
-		});
-	}
-
-	var getFirmware = function(){
-		sendUbusRequest('onion','oupgrade')
-		ubus call onion oupgrade '{"params":{"check":""}}'
-	}
+	var bFirmwareDownloaded = true;
 
 
 	var binName,
@@ -355,6 +332,11 @@
 		}
 	};
 
+	$('#upgradeFirmwareButton').click(function(){
+		var isChecked = $('#consoleInstall').is(':checked');
+		console.log(isChecked);
+		// Do Something with this info. Change some uci setting.
+	});
 
 
 	//======================
@@ -399,6 +381,42 @@
 		{
 			ready: function(){
 				console.log("Ready Function for the cloud registration step gets called here");
+				var devIdFound = false;
+				$('#setupCloudButton').attr("disabled",true);
+				$('#skipCloudReg').attr("disabled",true);
+				
+				var checkForId = setInterval(function(){
+					sendUbusRequest('uci','get',{config:"onion",section:"cloud",option:"deviceId"}, function(response){
+						console.log(response);
+						if(response.result.length == 2) {
+							console.log("deviceId",response.result[1].value);
+							devIdFound = true;
+							console.log("deviceId found, cloudSetup successful");
+
+						} else{
+							// $('#setupCloudButton').attr("disabled",true);
+							// showCloudRegMessage('Unable to register device with cloud. Try Again Later!');
+							console.log("Cloud Setup Failed");
+							
+						}
+					});
+				},500);
+
+				setTimeout(function(){
+					clearInterval(checkForId)
+					$('#cloudLoading').css('display','none');
+					$('#skipCloudReg').attr("disabled",false);
+					if(devIdFound){
+						$('#setupCloudButton').attr("disabled",false);
+						return true;
+					}else{
+						showCloudRegMessage('Unable to register device with cloud. Try Again Later!');
+						return true;
+					}
+				},5000);
+
+
+
 			},
 			init: function(){
 				console.log("init function for tjhe cloud registration step gets called here ");
@@ -415,8 +433,12 @@
 			},
 			init: function () {
 
-
-				//Populate the codeName, Model 
+				if(!upgradeRequired){
+					$('#upgradeFirmwareButton').html('Install Console');
+				}
+				if(!binDownloaded){
+					$('#download-progress').css('display','none');
+				}
 
 
 				// $('#download-progress').prop('value', 0);
