@@ -122,7 +122,97 @@
 			' + message + ' \
 		</div>'));
 	};
+	
+	var addWirelessNetwork = function () {
+			sendUbusRequest('uci', 'add', {
+				config: 'wireless',
+				type: 'wifi-iface'
+			}, function (result) {
+				console.log('uci add wireless result:', result);
+				if (result.result[0] === 0) {
+					sendUbusRequest('uci', 'commit', {
+							config: 'wireless'
+					}, function (result) {
+						if (result.result[0] === 0) {
+							console.log('connected');
+						} else {
+							console.log('Unable to add wireless network.');
+						}
+					});
+				} else {
+					console.log('Unable to add wireless network.');
+				}
+			});
+	};
+	
+	var genUciNetworkParams = function (ssid, auth, password, bApNetwork, bEnabled) {
+		var params = {};
+		// set the basic info
+		params.device 		= 'radio0'
+		params.ssid 		= ssid;
+		params.encryption 	= auth;
+		// set the network parameters based on if AP or STA type
+		if (bApNetwork) {
+			params.network 	= 'wlan';
+			params.mode 	= 'ap';
+		} else {
+			params.network 	= 'wwan';
+			params.mode 	= 'sta';
+		}				
+		// generate the values to set based on the encryption type
+		if (auth === 'wep') {
+			params.key 		= '1';
+			params.key1 	= password;
+		}
+		else if (auth === 'psk' || auth === 'psk2') {
+			params.key 		= password;
+		}
+		else {
+			params.key 		= '';
+		}
+		// enable or disable
+		if (bEnabled) {
+			params.disabled = '0'
+		} else {
+			params.disabled = '1'
+		}
+		return params;
+	};
+	
+	var setWirelessNetwork = function (sectionName, params) {
+			sendUbusRequest('uci', 'set', {
+				config: 'wireless',
+				section: sectionName,
+				values: params
+			}, function (result) {
+				console.log('uci set wireless result:', result);
+				if (result.result[0] === 0) {
+					sendUbusRequest('uci', 'commit', {
+							config: 'wireless'
+					}, function (result) {
+						if (result.result[0] === 0) {
+							console.log('Wireless set');
+						} else {
+							console.log('Unable to edit wireless network settings.');
+						}
+					});
+				} else {
+					console.log('Unable to edit wireless network settings.');
+				}
+			});
+	};
 
+
+	var setupWifiNetwork = function (ssid, password, auth, uciId) {
+		if (uciId == null) {
+			var uciId 			= -1;
+		}
+		var wifiSectionName = '@wifi-iface[' + uciId + ']'
+		// setup the wifi-iface
+		var params 			= genUciNetworkParams(ssid, auth, password, false, true);
+		var wirelessPromise	= setWirelessNetwork(wifiSectionName, params);
+	};
+	
 	// Check to see if the Omega is online!!
 	var checkOnlineRequest;
 	var isOnline = function (callback) {
@@ -133,18 +223,18 @@
 			checkOnlineRequest = null;
 		}
 
-		checkOnlineRequest = sendUbusRequest('onion', 'wifi-setup', {
-			params : {
-				checkconnection: ''
-			}
-		}, function (data) {
+		checkOnlineRequest = sendUbusRequest('file', 'exec', {
+			command: 'wget',
+			params: ['--spider', 'http://repo.onion.io/omega2/images']
+		}, function (data){
 			checkOnlineRequest = null;
 
-			if (data.result && data.result.length === 2) {
+			if (data.result[1].code === 0) {
 				omegaOnline = true;
 			}
 			callback(data);
 		});
+			
 	};
 
 	var showScanMessage = function (message) {
@@ -209,7 +299,7 @@
 	$('#wifi-form').submit(function (e) {
 		e.preventDefault();
 		$('#wifi-message > .alert').alert('close');
-		
+			
 		var postCheck = function () {
 			clearInterval(animationInterval);
 			$('#wifi-config-button').html('Configure Wi-Fi');
@@ -223,49 +313,80 @@
 			var label = $('#wifi-config-button').html();
 			$('#wifi-config-button').html(label.length < 14 ? label + '.' : 'Configuring');
 		}, 1000);
-
-		var connectionCheckInterval = setInterval(function () {
-			isOnline(function () {
-				if (omegaOnline) {
-					clearTimeout(connectionCheckTimeout);
-					clearInterval(connectionCheckInterval);
-
-					// Initiate firmware upgrade
-					console.log("Checking for upgrade");
-					sendUbusRequest('onion', 'oupgrade', {
-						params: {
-							check: ''
-						}
-					}, function (data) {
-						binName = data.result[1].image.local;
-						upgradeRequired = data.result[1].upgrade;
-						postCheck();
-						gotoStep(2);
-					});
+		
+		
+		if ($('#wifi-encryption').val() === 'psk2' || $('#wifi-encryption').val() === 'psk'){
+			if($('#wifi-key').val().length < 8 || $('#wifi-key').val().length > 63){
+				if (checkOnlineRequest) {
+					checkOnlineRequest.abort();
+					checkOnlineRequest = null;
 				}
-			});
-		}, 10000);
-
-		var connectionCheckTimeout = setTimeout(function () {
-			clearInterval(connectionCheckInterval);
-			if (checkOnlineRequest) {
-				checkOnlineRequest.abort();
-				checkOnlineRequest = null;
+				postCheck();
+				showWifiMessage('danger', 'Please enter a valid password. (WPA and WPA2 passwords are between 8 and 63 characters)');
 			}
-
-			postCheck();
-			showWifiMessage('warning', 'Unable to connect to ' + $('#wifi-ssid').val() + '. Please try again.');
-		}, 60000);
-
-		sendUbusRequest('onion', 'wifi-setup', {
-			params: {
-				ssid: $('#wifi-ssid').val(),
-				password: $('#wifi-key').val(),
-				auth: $('#wifi-encryption').val()
+			
+		}else if($('#wifi-encryption').val() === 'wep'){
+			if($('#wifi-key').val().length !== 5){
+				if (checkOnlineRequest) {
+					checkOnlineRequest.abort();
+					checkOnlineRequest = null;
+				}
+				postCheck();
+				showWifiMessage('danger', 'Please enter a valid password. (WEP passwords are 5 or 13 characters long)');
+			}else if($('#wifi-key').val().length !== 13){
+				if (checkOnlineRequest) {
+					checkOnlineRequest.abort();
+					checkOnlineRequest = null;
+				}
+				postCheck();
+				showWifiMessage('danger', 'Please enter a valid password. (WEP passwords are 5 or 13 characters long)');
 			}
-		}, function (data) {
-			console.log(data);
-		});
+		}
+		if(checkOnlineRequest !== null){
+			var connectionCheckInterval = setInterval(function () {
+				isOnline(function () {
+					if (omegaOnline) {
+						clearTimeout(connectionCheckTimeout);
+						clearInterval(connectionCheckInterval);
+						
+						sendUbusRequest('file', 'exec', {
+							command: '/etc/init.d/device-client',
+							params: ['restart']
+						}, function () {
+						// Initiate firmware upgrade
+						console.log("Checking for upgrade");
+						sendUbusRequest('onion', 'oupgrade', {
+							params: {
+								check: ''
+							}
+						}, function (data) {
+							binName = data.result[1].image.local;
+							upgradeRequired = data.result[1].upgrade;
+							postCheck();
+							gotoStep(2);
+						});
+					});
+					}
+				});
+			}, 10000);
+
+			var connectionCheckTimeout = setTimeout(function () {
+				clearInterval(connectionCheckInterval);
+				if (checkOnlineRequest) {
+					checkOnlineRequest.abort();
+					checkOnlineRequest = null;
+				}
+
+				postCheck();
+				showWifiMessage('warning', 'Unable to connect to ' + $('#wifi-ssid').val() + '. Please try again.');
+			}, 60000);
+			
+			
+			//Connect to the network
+			addWirelessNetwork();
+			setupWifiNetwork($('#wifi-ssid').val(), $('#wifi-key').val(), $('#wifi-encryption').val());
+
+		}
 	});
 
 
