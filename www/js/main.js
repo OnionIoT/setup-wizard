@@ -610,14 +610,14 @@
 				
 				//Check to see if you can skip here
 
-				sendUbusRequest('uci','get',{config:"onion",section:"cloud",option:"setup"},function(response){
+				sendUbusRequest('file','exec',{command:"uci",params:["get","onion.@console[0].wizard"]},function(response){
 					console.log(response);
-					response.result = [0,{}];
-					response.result[1].value = 1;
-					console.log(response);
+					// response.result = [0,{}];
+					// response.result[1].value = 1;
+					// console.log(response);
 					if(response.result.length == 2){
 						//Got a valid response, cuz the length is two
-						if(response.result[1].value == 1){
+						if(response.result[1].stdout == "1\n"){
 							console.log("Skip Buttons should be visible");
 							//If value is 1, the setup has been run before and all skip buttons are enabled.
 							$('#skipStepTestButton').css('display','block');
