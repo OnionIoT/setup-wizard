@@ -193,6 +193,10 @@
 					}, function (result) {
 						if (result.result[0] === 0) {
 							console.log('Wireless set');
+							sendUbusRequest('file', 'exec', {
+							command: 'wifimanager',
+							params: []
+						})
 						} else {
 							console.log('Unable to edit wireless network settings.');
 						}
@@ -210,7 +214,7 @@
 		}
 		var wifiSectionName = '@wifi-iface[' + uciId + ']'
 		// setup the wifi-iface
-		var params 			= genUciNetworkParams(ssid, auth, password, false, true);
+		var params 			= genUciNetworkParams(ssid, auth, password, false, false);
 		var wirelessPromise	= setWirelessNetwork(wifiSectionName, params);
 	};
 	
@@ -305,9 +309,11 @@
 			clearInterval(animationInterval);
 			$('#wifi-config-button').html('Configure Wi-Fi');
 			$('#wifi-config-button').prop('disabled', false);
+			$('#skipStepTestButton').prop('disabled', false);
 		};
 
 		$('#wifi-config-button').prop('disabled', true);
+		$('#skipStepTestButton').prop('disabled', true);
 		$('#wifi-config-button').html('Configuring');
 
 		var animationInterval = setInterval(function () {
@@ -477,9 +483,9 @@
 		// Do Something with this info. Change some uci setting.
 		sendUbusRequest('uci', 'set', {
 				config: 'onion',
-				section: '@console[0]',
+				section: 'console',
 				values: {
-					setupdone: '1'
+					install: '1'
 				}
 			}, function (result) {
 				console.log('uci set onion.console.setup result:', result);
@@ -610,14 +616,14 @@
 				
 				//Check to see if you can skip here
 
-				sendUbusRequest('file','exec',{command:"uci",params:["get","onion.@console[0].wizard"]},function(response){
+				sendUbusRequest('uci','get',{config:"onion",section:"console",option:"setup"},function(response){
 					console.log(response);
 					// response.result = [0,{}];
 					// response.result[1].value = 1;
 					// console.log(response);
 					if(response.result.length == 2){
 						//Got a valid response, cuz the length is two
-						if(response.result[1].stdout == "1\n"){
+						if(response.result[1].value == "1"){
 							console.log("Skip Buttons should be visible");
 							//If value is 1, the setup has been run before and all skip buttons are enabled.
 							$('#skipStepTestButton').css('display','block');
@@ -769,9 +775,9 @@
 				$('#success').hide();
 				sendUbusRequest('uci', 'set', {
 					config: 'onion',
-					section: '@console[0]',
+					section: 'console',
 					values: {
-						wizard: '1'
+						setup: '1'
 					}
 				}, function (result) {
 					console.log('uci set onion.console.setup result:', result);
