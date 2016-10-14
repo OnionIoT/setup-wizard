@@ -89,10 +89,12 @@
 								</div>
 							</div>
 
-							<div class="form-group row">
-								<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 col-lg-offset-4 col-md-offset-4 col-sm-offset-4 col-xs-offset-4">
-								<button id="wifi-config-button" type="submit" class="btn btn-success btn-block">Configure Wi-Fi</button>
-								<button id="skipStepTestButton" type="button" class="btn btn-success btn-block">Skip Step</button>
+							<div class="row">
+								<div class="col-sm-6">
+									<button id="wifi-config-button" type="submit" class="btn btn-success btn-block">Configure Wi-Fi</button>
+								</div>
+								<div class="col-sm-6">
+									<button id="skipStepTestButton" type="button" class="btn btn-success btn-block">Skip Step</button>
 								</div>
 							</div>
 						</form>
@@ -104,10 +106,16 @@
 		        		<div id="cloudLoading" class="loading"></div>
 		        		<p>Some Text Should go here</p>
 						<div id="cloudRegMessage"></div>
-		        		<div class='horizontal layout center-center'>
-			        		<button id="skipCloudReg" type="button" class="btn btn-success btn-block">Skip Step</button>
+						<div class="form-group row">
 			        		<button id="setupCloudButton" type="button" class="btn btn-success btn-block">Setup Cloud</button>
-			        		<button id="setupCloudBackButton" type="button" class = "btn btn-success btn-block">Back</button>
+			        	</div>
+		        		<div class='row'>
+			        		<div class="col-sm-6">
+			        			<button id="setupCloudBackButton" type="button" class = "btn btn-success btn-block">Back</button>
+			        		</div>
+		        			<div class="col-sm-6">
+			        			<button id="skipCloudReg" type="button" class="btn btn-success btn-block">Skip Step</button>
+			        		</div>
 		        		</div>
 		        	</div>
 
@@ -116,13 +124,20 @@
 		        	<div>
 		        		<h3 class="m-b-md">Firmware Update</h3>
 		        		<p>Some Text Goes Here</p>
-		        		<div style="text-align:center;">
-		        			Install Console<input type="checkbox" name="console" id="consoleInstall" value="Console" style="margin-left:5px;" checked><br>
+		        		<div style="text-align:center;" class="checkbox">
+		        			<label>Install Console<input type="checkbox" name="console" id="consoleInstall" value="Console" style="margin-left:5px;" checked><br>
+		 					</label>
 		        		</div>
-		        		<div id="firwareButtonContainer" class="col-sm-6">
+		        		<div class="form-group row">
 			        		<button id="upgradeFirmwareButton" type="button" class="btn btn-success btn-block">Upgrade Firmware</button>
-			        		<button id="skipFirmwareStep" type="button" class="btn btn-success btn-block">Skip Step</button>
-			        		<button id="firmwareBackButton" type="button" class = "btn btn-success btn-block">Back</button>
+			        	</div>
+		        		<div id="firwareButtonContainer" class="row">
+			        		<div class="col-sm-6">
+			        			<button id="firmwareBackButton" type="button" class = "btn btn-success btn-block">Back</button>
+			        		</div>
+			        		<div class="col-sm-6">
+			        			<button id="skipFirmwareStep" type="button" class="btn btn-success btn-block">Skip Step</button>
+			        		</div>
 		        		</div>
 		        		<progress id="download-progress" class="progress progress-striped progress-animated" value="0" max="0"></progress>
 		        		
