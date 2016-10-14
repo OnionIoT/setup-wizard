@@ -410,14 +410,23 @@
 		gotoStep(3);
 	})
 
+	$('#setupCloudBackButton').click(function(){
+		console.log("Back Button from the cloud setup gets called");
+		gotoStep(1);
+	})
+
 	var showCloudRegMessage = function (message) {
-		$('#cloudRegMessage').append($('<div class="alert alert-warning alert-dismissible fade in" role="alert"> \
+		$('#cloudRegMessage').append($('<div id="cloudErrorMsg" class="alert alert-warning alert-dismissible fade in" role="alert"> \
 			<button type="button" class="close" data-dismiss="alert" aria-label="Close"> \
 				<span aria-hidden="true">&times;</span> \
 				<span class="sr-only">Close</span> \
 			</button> \
 			<strong>Error:</strong> ' + message + ' \
 		</div>'));
+
+		setTimeout(function(){
+			$('#cloudErrorMsg').remove();
+		},15000);
 	};
 
 	//======================
@@ -464,6 +473,30 @@
 		// Do Something with this info. Change some uci setting.
 	});
 
+	$('#skipFirmwareStep').click(function(){
+		console.log("Skip Firmware Step Button is clicked");
+		upgradeRequired = false;
+		console.log(upgradeRequired);
+		// The last page behaves differently depending on which case was passed in. 
+		// Makes sense to add a new case for this.
+		gotoStep(4);
+	});
+
+	$('#firmwareBackButton').click(function(){
+		console.log("firmware back button gets called");
+		gotoStep(2);
+	})
+
+
+	//=====================
+	//Step 5: Setup Complete
+	//======================
+
+	$('#completeBackButton').click(function(){
+		console.log("complete back button gets called");
+		gotoStep(3);
+	})
+
 
 	//======================
 	// Steps Management
@@ -500,6 +533,36 @@
 						scanWifiNetwork();
 					} else {
 						gotoStep(0);
+					}
+				});
+
+				//Check to see if you can skip here
+
+				sendUbusRequest('uci','get',{config:"onion",section:"cloud",option:"setup"},function(response){
+					console.log(response);
+					response.result = [0,{}];
+					response.result[1].value = 1;
+					console.log(response);
+					if(response.result.length == 2){
+						//Got a valid response, cuz the length is two
+						if(response.result[1].value == 1){
+							console.log("Skip Buttons should be visible");
+							//If value is 1, the setup has been run before and all skip buttons are enabled.
+							$('#skipStepTestButton').css('display','block');
+							$('#skipFirmwareStep').css('display','block');
+							//Fuck it while we are at it, lets add the back buttons here too? Or should we always have back buttons?
+						}else{
+							console.log("Skip Buttons are hidden");
+							//If value is 0, the setup has NOT been run before and all skip buttons are disabled except for cloudSetup one. 
+							$('#skipStepTestButton').css('display','none');
+							$('#skipFirmwareStep').css('display','none');
+						}
+					} else{
+						console.log("Got a wack response from the ubus request, hid all skip buttons");
+						//If there is an error, assume it is a first time setup
+						$('#skipStepTestButton').css('display','none');
+						$('#skipFirmwareStep').css('display','none');
+
 					}
 				});
 			}
@@ -547,7 +610,7 @@
 			},
 			init: function(){
 				console.log("init function for tjhe cloud registration step gets called here ");
-
+				$('#cloudLoading').css('display','block');
 				var devIdFound = false;
 				$('#setupCloudButton').attr("disabled",true);
 				$('#skipCloudReg').attr("disabled",true);
