@@ -17,10 +17,10 @@
 				<div class="onion-logo"></div>
 				<h2 class="m-t-md m-b-lg text-center">Onion Omega Setup Wizard</h2>
 				<ul id="steps-indicator"  class="m-b-lg">
-		            <li>Login to Omega</li>
-		            <li>Setup Wi-Fi</li>
-		            <li>Cloud Registration</li>
-		            <li>Software Upgrade</li>
+		            <li>Login</li>
+		            <li>Wi-Fi</li>
+		            <li>Cloud</li>
+		            <li>Software</li>
 		            <li>Done!</li>
 		        </ul>
 
@@ -88,10 +88,12 @@
 									<div id="wifi-message"></div>
 								</div>
 							</div>
-
+								<div class="form-group row">
+									<button id="wifi-config-button" type="submit" class="btn btn-success btn-block">Configure Wi-Fi</button>
+								</div>
 							<div class="row">
 								<div class="col-sm-6">
-									<button id="wifi-config-button" type="submit" class="btn btn-success btn-block">Configure Wi-Fi</button>
+									<button id="setupCloudBackButton" type="button" class ="btn btn-success btn-block">Back</button>
 								</div>
 								<div class="col-sm-6">
 									<button id="skipStepTestButton" type="button" class="btn btn-success btn-block">Skip Step</button>
@@ -170,7 +172,7 @@
 						</div>
 						<div class="row">
 							<div class="col-sm-6">
-								<button id="completeBackButton" type="button" class="btn btn-success btn-block">Skip Step</button>
+								<button id="completeBackButton" type="button" class="btn btn-success btn-block">Back</button>
 							</div>
 						</div>
 		        	</div>

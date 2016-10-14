@@ -88,7 +88,7 @@
 					$.sessionStorage.set('OmegaToken', data.result[1].ubus_rpc_session);
 					$.sessionStorage.set('OmegaTokenExpires', (new Date()).getTime() + data.result[1].expires * 1000);
 
-					gotoStep(1);
+					gotoStep(nextStep);
 				} else {
 					showLoginMessage('Login failed.');
 				}
@@ -372,7 +372,7 @@
 							fileSize = data.result[1].size;
 							document.getElementById('download-progress').setAttribute('max', fileSize);
 							postCheck();
-							gotoStep(2);
+							gotoStep(nextStep);
 						});
 					});
 					}
@@ -400,7 +400,9 @@
 
 	$('#skipStepTestButton').click(function(){
 		console.log("skipStepTestButton gets called");
-		gotoStep(2);
+		console.log("nextStep in skip TestButton is nextStep",nextStep);
+		console.log(preStep);
+		gotoStep(nextStep);
 	});
 
 
@@ -411,18 +413,18 @@
 		//Open the window.
 		var win = window.open("https://google.com");
 		// steps[3].init();
-		gotoStep(3)
+		gotoStep(nextStep)
 	});
 
 	$('#skipCloudReg').click(function(){
 		// steps[3].init();
-		gotoStep(3);
-	})
+		gotoStep(nextStep);
+	});
 
 	$('#setupCloudBackButton').click(function(){
 		console.log("Back Button from the cloud setup gets called");
-		gotoStep(1);
-	})
+		gotoStep(preStep);
+	});
 
 	var showCloudRegMessage = function (message) {
 		$('#cloudRegMessage').append($('<div id="cloudErrorMsg" class="alert alert-warning alert-dismissible fade in" role="alert"> \
@@ -463,7 +465,7 @@
 						if (data.result[1].size === fileSize) {
 							binDownloaded = true;
 							clearInterval(checkDownloadInterval);
-							gotoStep(4);
+							gotoStep(nextStep);
 						}
 					}
 				});
@@ -472,7 +474,7 @@
 		else {
 			// no upgrade download required
 			setTimeout(function(){
-				gotoStep(4);
+				gotoStep(nextStep);
 			},1000);
 		}
 	};
@@ -503,7 +505,7 @@
 					console.log('Unable to edit console settings.');
 				}
 			});
-			gotoStep(4);
+			gotoStep(nextStep);
 	});
 
 	$('#skipFirmwareStep').click(function(){
@@ -512,12 +514,12 @@
 		console.log(upgradeRequired);
 		// The last page behaves differently depending on which case was passed in. 
 		// Makes sense to add a new case for this.
-		gotoStep(4);
+		gotoStep(nextStep);
 	});
 
 	$('#firmwareBackButton').click(function(){
 		console.log("firmware back button gets called");
-		gotoStep(2);
+		gotoStep(preStep);
 	})
 
 
@@ -527,7 +529,7 @@
 
 	$('#completeBackButton').click(function(){
 		console.log("complete back button gets called");
-		gotoStep(3);
+		gotoStep(preStep);
 	})
 
 
@@ -557,7 +559,10 @@
 	// Steps Management
 	//======================
 
-	var currentStep;
+	var currentStep = 0;
+	var nextStep;
+	var preStep;
+
 
 	var steps = [
 		{
@@ -587,7 +592,7 @@
 						$('#wifi-key').val('');
 						scanWifiNetwork();
 					} else {
-						gotoStep(0);
+						gotoStep(preStep);
 					}
 				});
 
@@ -625,9 +630,11 @@
 						//Got a valid response, cuz the length is two
 						if(response.result[1].value == "1"){
 							console.log("Skip Buttons should be visible");
-							//If value is 1, the setup has been run before and all skip buttons are enabled.
+							//If value is 1, the setup has been run before and all skip/back buttons except cloud reg are enabled.
 							$('#skipStepTestButton').css('display','block');
 							$('#skipFirmwareStep').css('display','block');
+							// $('#setupCloudBackButton').css('display','block');
+
 							//Fuck it while we are at it, lets add the back buttons here too? Or should we always have back buttons?
 						}else{
 							console.log("Skip Buttons are hidden");
@@ -821,8 +828,10 @@
 	];
 
 	var gotoStep = function (step) {
-		if (currentStep !== step) {
+		if (currentStep !== step || ( (currentStep==0) && (step ==0))) {
 			currentStep = step;
+			preStep = currentStep - 1;
+			nextStep = currentStep + 1;
 
 			var indicators = $('#steps-indicator').children(),
 				controls = $('#steps').children();
@@ -843,12 +852,14 @@
 
 	$(function () {
 		// Check which step we are in
+		console.log("this part of the script gets executed");
 		for (var i = 0; i < steps.length; i++) {
 			// Test to see if current Step finished
 			if (!steps[i].ready()) {
 				break;
 			}
 		}
+		console.log(i);
 
 		gotoStep(i - 1);
 	});
