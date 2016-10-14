@@ -111,6 +111,7 @@
 	//======================
 
 	var availableWifiNetworks,
+		fileSize = '0',
 		omegaOnline = false;
 
 	var showWifiMessage = function (type, message) {
@@ -362,6 +363,8 @@
 						}, function (data) {
 							binName = data.result[1].image.local;
 							upgradeRequired = data.result[1].upgrade;
+							fileSize = data.result[1].size;
+							document.getElementById('download-progress').setAttribute('max', fileSize);
 							postCheck();
 							gotoStep(2);
 						});
@@ -435,11 +438,12 @@
 	var bFirmwareUpdated = true;
 
 	var bFirmwareDownloaded = true;
-
+		
+	var isChecked = true;
 
 	var binName,
 		binDownloaded = false,
-		upgradeRequired = false;
+		upgradeRequired = 'false';
 
 	var checkDownload = function () {
 		if (!binDownloaded) {
@@ -450,7 +454,7 @@
 					if (data && data.result.length === 2) {
 						$('#download-progress').prop('value', data.result[1].size);
 
-						if (data.result[1].size === 16252928) {
+						if (data.result[1].size === fileSize) {
 							binDownloaded = true;
 							clearInterval(checkDownloadInterval);
 							gotoStep(4);
@@ -468,9 +472,32 @@
 	};
 
 	$('#upgradeFirmwareButton').click(function(){
-		var isChecked = $('#consoleInstall').is(':checked');
+		isChecked = $('#consoleInstall').is(':checked');
 		console.log(isChecked);
 		// Do Something with this info. Change some uci setting.
+		sendUbusRequest('uci', 'set', {
+				config: 'onion',
+				section: '@console[0]',
+				values: {
+					setupdone: '1'
+				}
+			}, function (result) {
+				console.log('uci set onion.console.setup result:', result);
+				if (result.result[0] === 0) {
+					sendUbusRequest('uci', 'commit', {
+							config: 'onion'
+					}, function (result) {
+						if (result.result[0] === 0) {
+							console.log('console setup set');
+						} else {
+							console.log('Unable to edit console settings.');
+						}
+					});
+				} else {
+					console.log('Unable to edit console settings.');
+				}
+			});
+			gotoStep(4);
 	});
 
 	$('#skipFirmwareStep').click(function(){
@@ -496,6 +523,28 @@
 		console.log("complete back button gets called");
 		gotoStep(3);
 	})
+
+
+	function startTimer(duration, display) {
+		var timer = duration, minutes, seconds;
+		setInterval(function () {
+			minutes = parseInt(timer / 60, 10)
+			seconds = parseInt(timer % 60, 10);
+
+			minutes = minutes < 10 ? "0" + minutes : minutes;
+			seconds = seconds < 10 ? "0" + seconds : seconds;
+
+			display.textContent = minutes + ":" + seconds;
+
+			if (--timer < 0) {
+				timer = 0;
+				$('#loading').hide();
+				$('#warning').hide();
+				$('#success').show();
+			}
+		}, 1000);
+	}
+
 
 
 	//======================
@@ -536,6 +585,29 @@
 					}
 				});
 
+				
+				//Check if already connected to internet. If yes, perform oupgrade check.
+				sendUbusRequest('file', 'exec', {
+					command: 'wget',
+					params: ['--spider', 'http://repo.onion.io/omega2/images']
+				}, function (data){
+					if (data.result[1].code === 0) {
+						omegaOnline = true;
+						console.log('Already connected to the internet!')
+						sendUbusRequest('onion', 'oupgrade', {
+							params: {
+								check: ''
+							}
+						}, function (data) {
+							binName = data.result[1].image.local;
+							upgradeRequired = data.result[1].upgrade;
+							upgradeRequired = 'true';
+							fileSize = data.result[1].size;
+							document.getElementById('download-progress').setAttribute('max', fileSize);
+						});
+					}
+				});
+				
 				//Check to see if you can skip here
 
 				sendUbusRequest('uci','get',{config:"onion",section:"cloud",option:"setup"},function(response){
@@ -609,7 +681,7 @@
 
 			},
 			init: function(){
-				console.log("init function for tjhe cloud registration step gets called here ");
+				console.log("init function for the cloud registration step gets called here ");
 				$('#cloudLoading').css('display','block');
 				var devIdFound = false;
 				$('#setupCloudButton').attr("disabled",true);
@@ -694,12 +766,49 @@
 				return binDownloaded;
 			},
 			init: function () {
+				$('#success').hide();
+				sendUbusRequest('uci', 'set', {
+					config: 'onion',
+					section: '@console[0]',
+					values: {
+						wizard: '1'
+					}
+				}, function (result) {
+					console.log('uci set onion.console.setup result:', result);
+					if (result.result[0] === 0) {
+						sendUbusRequest('uci', 'commit', {
+								config: 'onion'
+						}, function (result) {
+							if (result.result[0] === 0) {
+								console.log('console setup set');
+							} else {
+								console.log('Unable to edit console settings.');
+							}
+						});
+					} else {
+						console.log('Unable to edit console settings.');
+					}
+				});
 				if (upgradeRequired === 'true') {
 					$('#upgrade-not-required').hide();
+					$('#install-console-only').hide();
 					$('#upgrade-required').show();
+					startTimer(239, document.querySelector('#time'));
+					sendUbusRequest('onion', 'oupgrade', {
+						params: {
+							force: ''
+						}
+					});
 				} else {
-					$('#upgrade-required').hide();
-					$('#upgrade-not-required').show();
+					if(isChecked){
+						$('#upgrade-required').hide();
+						$('#upgrade-not-required').hide();
+						$('#install-console-only').show();
+					} else {
+						$('#upgrade-required').hide();
+						$('#install-console-only').hide();
+						$('#upgrade-not-required').show();
+					}
 				}
 			}
 		}

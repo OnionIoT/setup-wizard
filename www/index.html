@@ -124,20 +124,21 @@
 			        		<button id="skipFirmwareStep" type="button" class="btn btn-success btn-block">Skip Step</button>
 			        		<button id="firmwareBackButton" type="button" class = "btn btn-success btn-block">Back</button>
 		        		</div>
-		        		<progress id="download-progress" class="progress progress-striped progress-animated" value="0" max="16252928"></progress>
+		        		<progress id="download-progress" class="progress progress-striped progress-animated" value="0" max="0"></progress>
 		        		
 		        	</div>
 
 		        	<!-- Step 5: Finished! -->
 		        	<div>
 		        		<div id="upgrade-required">
-			        		<div class="loading"></div>
-			        		<div class="alert alert-success m-t-lg" role="alert">
-								<p class="text-center"><strong>You have successfully set up your Omega!</strong></p>
-								<p>Please be patient while the Omega updates and finalizes configuration. Once completed, the Omega will reboot automatically. You can now safely exit the Setup Wizard.</p>
-							</div>
-							<div class="alert alert-warning" role="alert">
+			        		<div id="loading" class="loading"></div>
+							<div id="warning" class="alert alert-danger m-t-lg" role="alert">
 								<p class="text-center"><strong>Warning: Do not power off the device during update.</strong></p>
+								<p class="text-center" id="time">04:00</p>
+							</div>
+			        		<div id="success" class="alert alert-success" role="alert">
+								<p class="text-center"><strong>You have successfully set up your Omega!</strong></p>
+								<p>The Omega will reboot automatically. You can now safely exit the Setup Wizard.</p>
 							</div>
 						</div>
 						<div id="upgrade-not-required">
@@ -146,8 +147,11 @@
 								<p class="text-center">You can now safely exit the Setup Wizard.</p>
 							</div>
 						</div>
-						<div>
-							<button id="completeBackButton" type="button" class = "btn btn-success btn-block">Back</button>
+						<div id="install-console-only">
+							<div class="alert alert-success m-t-lg" role="alert">
+								<p class="text-center"><strong>You have successfully set up your Omega!</strong></p>
+								<p class="text-center">Please wait while the console is installed.</p>
+							</div>
 						</div>
 		        	</div>
 		        </div>
