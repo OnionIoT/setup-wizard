@@ -706,39 +706,39 @@
 			init: function(){
 				console.log("init function for the cloud registration step gets called here ");
 				$('#cloudLoading').css('display','block');
-				// var devIdFound = false;
-				// $('#setupCloudButton').attr("disabled",true);
-				// $('#skipCloudReg').attr("disabled",true);
+				var devIdFound = false;
+				$('#setupCloudButton').attr("disabled",true);
+				$('#skipCloudReg').attr("disabled",true);
 				
-				// var checkForId = setInterval(function(){
-					// sendUbusRequest('uci','get',{config:"onion",section:"cloud",option:"deviceId"}, function(response){
-						// console.log(response);
-						// if(response.result.length == 2) {
-							// console.log("deviceId",response.result[1].value);
-							// devIdFound = true;
-							// console.log("deviceId found, cloudSetup successful");
+				var checkForId = setInterval(function(){
+					sendUbusRequest('uci','get',{config:"onion",section:"cloud",option:"deviceId"}, function(response){
+						console.log(response);
+						if(response.result.length == 2) {
+							console.log("deviceId",response.result[1].value);
+							devIdFound = true;
+							console.log("deviceId found, cloudSetup successful");
 
-						// } else{
-							// $('#setupCloudButton').attr("disabled",true);
+						} else{
+							$('#setupCloudButton').attr("disabled",true);
 							// showCloudRegMessage('Unable to register device with cloud. Try Again Later!');
-							// console.log("Cloud Setup Failed");
+							console.log("Cloud Setup Failed");
 							
-						// }
-					// });
-				// },500);
+						}
+					});
+				},500);
 
-				// setTimeout(function(){
-					// clearInterval(checkForId)
-					// $('#cloudLoading').css('display','none');
-					// $('#skipCloudReg').attr("disabled",false);
-					// if(devIdFound){
-						// $('#setupCloudButton').attr("disabled",false);
-						// return true;
-					// }else{
-						// showCloudRegMessage('Unable to register device with cloud. Try Again Later!');
-						// return true;
-					// }
-				// },5000);
+				setTimeout(function(){
+					clearInterval(checkForId)
+					$('#cloudLoading').css('display','none');
+					$('#skipCloudReg').attr("disabled",false);
+					if(devIdFound){
+						$('#setupCloudButton').attr("disabled",false);
+						return true;
+					}else{
+						showCloudRegMessage('Unable to register device with cloud. Try Again Later!');
+						return true;
+					}
+				},5000);
 				//Run a function to see if the device is setup with the cloud.
 				//If it is not, grey out the setupCloud Button and make it not clickable
 				//If it is, change its color.
