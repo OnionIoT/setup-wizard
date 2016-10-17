@@ -421,17 +421,17 @@
 		gotoStep(nextStep);
 	});
 
-	// $('#setupCloudBackButton').click(function(){
-	// 	console.log("preStep",preStep);
-	// 	console.log("Back Button from the cloud setup gets called");
-	// 	gotoStep(preStep);
-	// });
-
-	$(document).on("click","#setupCloudBackButton",function(){
+	$('#setupCloudBackButton').click(function(){
 		console.log("preStep",preStep);
 		console.log("Back Button from the cloud setup gets called");
 		gotoStep(preStep);
 	});
+
+	// $(document).on("click","#setupCloudBackButton",function(){
+	// 	console.log("preStep",preStep);
+	// 	console.log("Back Button from the cloud setup gets called");
+	// 	gotoStep(preStep);
+	// });
 
 	var showCloudRegMessage = function (message) {
 		$('#cloudRegMessage').append($('<div id="cloudErrorMsg" class="alert alert-warning alert-dismissible fade in" role="alert"> \
@@ -641,12 +641,22 @@
 							//If value is 0, the setup has NOT been run before and all skip buttons are disabled except for cloudSetup one. 
 							$('#skipStepTestButton').css('display','none');
 							$('#skipFirmwareStep').css('display','none');
+							console.log("About to hide the setupCloudBackButton");
+							$('#setupCloudBackButton').css('display','none');
+							console.log("Hiding setupCloudBackButton");
+							$('#firmwareBackButton').css('display','none');
+
 						}
 					} else{
 						console.log("Got a wack response from the ubus request, hid all skip buttons");
 						//If there is an error, assume it is a first time setup
 						$('#skipStepTestButton').css('display','none');
 						$('#skipFirmwareStep').css('display','none');
+						console.log("About to hide the setupCloudBackButton");
+						$('#setupCloudBackButton').css('display','none');
+						console.log("Hiding setupCloudBackButton");
+						$('#firmwareBackButton').css('display','none');
+
 
 					}
 				});
