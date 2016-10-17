@@ -232,7 +232,7 @@
 			command: 'wget',
 			params: ['--spider', 'http://repo.onion.io/omega2/images']
 		}, function (data){
-			checkOnlineRequest = null;
+			//checkOnlineRequest = null;
 
 			if (data.result[1].code === 0) {
 				omegaOnline = true;
