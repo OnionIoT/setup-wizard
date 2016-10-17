@@ -356,10 +356,10 @@
 						clearTimeout(connectionCheckTimeout);
 						clearInterval(connectionCheckInterval);
 						
-						sendUbusRequest('file', 'exec', {
-							command: '/etc/init.d/device-client',
-							params: ['restart']
-						}, function () {
+						// sendUbusRequest('file', 'exec', {
+							// command: '/etc/init.d/device-client',
+							// params: ['restart']
+						// }, function () {
 						// Initiate firmware upgrade
 						console.log("Checking for upgrade");
 						sendUbusRequest('onion', 'oupgrade', {
@@ -369,12 +369,12 @@
 						}, function (data) {
 							binName = data.result[1].image.local;
 							upgradeRequired = data.result[1].upgrade;
-							fileSize = data.result[1].size;
-							document.getElementById('download-progress').setAttribute('max', fileSize);
+							fileSize = data.result[1].image.size;
+							$('#download-progress').prop('max', data.result[1].image.size);
 							postCheck();
 							gotoStep(nextStep);
 						});
-					});
+					// });
 					}
 				});
 			}, 10000);
@@ -469,20 +469,18 @@
 					if (data && data.result.length === 2) {
 						$('#download-progress').prop('value', data.result[1].size);
 
-						if (data.result[1].size === fileSize) {
+						if (data.result[1].size === parseInt(fileSize)) {
 							binDownloaded = true;
 							clearInterval(checkDownloadInterval);
-							gotoStep(nextStep);
+							console.log('download complete')
+							$('#downloading').hide();
+							$('#upgrade-required').show();
+							startTimer();
+							//gotoStep(nextStep);
 						}
 					}
 				});
 			}, 1000);
-		}
-		else {
-			// no upgrade download required
-			setTimeout(function(){
-				gotoStep(nextStep);
-			},1000);
 		}
 	};
 
@@ -517,7 +515,7 @@
 
 	$('#skipFirmwareStep').click(function(){
 		console.log("Skip Firmware Step Button is clicked");
-		upgradeRequired = false;
+		upgradeRequired = 'false';
 		console.log(upgradeRequired);
 		// The last page behaves differently depending on which case was passed in. 
 		// Makes sense to add a new case for this.
@@ -538,29 +536,23 @@
 		console.log("complete back button gets called");
 		gotoStep(preStep);
 	})
+	
+	function startTimer(){
+		var time = 0;
+		var timerBar = setInterval(function () {
+			time = time + 1;
+			
+			$('#time').prop('value', time.toString());
 
-
-	function startTimer(duration, display) {
-		var timer = duration, minutes, seconds;
-		setInterval(function () {
-			minutes = parseInt(timer / 60, 10)
-			seconds = parseInt(timer % 60, 10);
-
-			minutes = minutes < 10 ? "0" + minutes : minutes;
-			seconds = seconds < 10 ? "0" + seconds : seconds;
-
-			display.textContent = minutes + ":" + seconds;
-
-			if (--timer < 0) {
-				timer = 0;
+			if (time >= 960) {
 				$('#loading').hide();
 				$('#warning').hide();
 				$('#success').show();
+				clearInterval(timerBar);
 			}
-		}, 1000);
+		}, 250);
+		
 	}
-
-
 
 	//======================
 	// Steps Management
@@ -619,9 +611,8 @@
 						}, function (data) {
 							binName = data.result[1].image.local;
 							upgradeRequired = data.result[1].upgrade;
-							upgradeRequired = 'true';
-							fileSize = data.result[1].size;
-							document.getElementById('download-progress').setAttribute('max', fileSize);
+							fileSize = data.result[1].image.size;
+							$('#download-progress').prop('max', data.result[1].image.size);
 						});
 					}
 				});
@@ -705,39 +696,39 @@
 			init: function(){
 				console.log("init function for the cloud registration step gets called here ");
 				$('#cloudLoading').css('display','block');
-				var devIdFound = false;
-				$('#setupCloudButton').attr("disabled",true);
-				$('#skipCloudReg').attr("disabled",true);
+				// var devIdFound = false;
+				// $('#setupCloudButton').attr("disabled",true);
+				// $('#skipCloudReg').attr("disabled",true);
 				
-				var checkForId = setInterval(function(){
-					sendUbusRequest('uci','get',{config:"onion",section:"cloud",option:"deviceId"}, function(response){
-						console.log(response);
-						if(response.result.length == 2) {
-							console.log("deviceId",response.result[1].value);
-							devIdFound = true;
-							console.log("deviceId found, cloudSetup successful");
+				// var checkForId = setInterval(function(){
+					// sendUbusRequest('uci','get',{config:"onion",section:"cloud",option:"deviceId"}, function(response){
+						// console.log(response);
+						// if(response.result.length == 2) {
+							// console.log("deviceId",response.result[1].value);
+							// devIdFound = true;
+							// console.log("deviceId found, cloudSetup successful");
 
-						} else{
+						// } else{
 							// $('#setupCloudButton').attr("disabled",true);
 							// showCloudRegMessage('Unable to register device with cloud. Try Again Later!');
-							console.log("Cloud Setup Failed");
+							// console.log("Cloud Setup Failed");
 							
-						}
-					});
-				},500);
+						// }
+					// });
+				// },500);
 
-				setTimeout(function(){
-					clearInterval(checkForId)
-					$('#cloudLoading').css('display','none');
-					$('#skipCloudReg').attr("disabled",false);
-					if(devIdFound){
-						$('#setupCloudButton').attr("disabled",false);
-						return true;
-					}else{
-						showCloudRegMessage('Unable to register device with cloud. Try Again Later!');
-						return true;
-					}
-				},5000);
+				// setTimeout(function(){
+					// clearInterval(checkForId)
+					// $('#cloudLoading').css('display','none');
+					// $('#skipCloudReg').attr("disabled",false);
+					// if(devIdFound){
+						// $('#setupCloudButton').attr("disabled",false);
+						// return true;
+					// }else{
+						// showCloudRegMessage('Unable to register device with cloud. Try Again Later!');
+						// return true;
+					// }
+				// },5000);
 				//Run a function to see if the device is setup with the cloud.
 				//If it is not, grey out the setupCloud Button and make it not clickable
 				//If it is, change its color.
@@ -752,35 +743,8 @@
 			init: function () {
 				console.log("upgradeRequired",upgradeRequired);
 				console.log("binDownloaded",binDownloaded);
-
-				if(upgradeRequired == "false"){
-					$('#upgradeFirmwareButton').html('Install Console');
-				}
-				if(binDownloaded == false){
-					$('#download-progress').css('display','none');
-				}
-
-
-				// $('#download-progress').prop('value', 0);
-				// binDownloaded = false;
-
-				// if (upgradeRequired === 'true') {
-				// 	// Actually start the upgrade!
-				// 	console.log("Upgrading");
-				// 	sendUbusRequest('onion', 'oupgrade', {
-				// 		params: {
-				// 			force: ''
-				// 		}
-				// 	});
-				// }
-				// else {
-				// 	// No need to upgrade
-				// 	console.log("No upgrade required");
-				// 	$('#steps').children().eq(2).hide();	//little hacky
-				// 	binDownloaded = true;
-				// }
-
-				// checkDownload();
+				$('#downloading').hide();
+				$('#download-complete').hide();
 			}
 		},
 		{
@@ -814,21 +778,30 @@
 				if (upgradeRequired === 'true') {
 					$('#upgrade-not-required').hide();
 					$('#install-console-only').hide();
-					$('#upgrade-required').show();
-					startTimer(239, document.querySelector('#time'));
+					$('#upgrade-required').hide();
+					$('#downloading').show();
+					$('#download-progress').prop('value', 0);
+					
+					
+					console.log("Upgrading");
 					sendUbusRequest('onion', 'oupgrade', {
 						params: {
 							force: ''
 						}
 					});
+					
+					checkDownload();
 				} else {
+					binDownloaded = true;
 					if(isChecked){
 						$('#upgrade-required').hide();
 						$('#upgrade-not-required').hide();
+						$('#downloading').hide();
 						$('#install-console-only').show();
 					} else {
 						$('#upgrade-required').hide();
 						$('#install-console-only').hide();
+						$('#downloading').hide();
 						$('#upgrade-not-required').show();
 					}
 				}

@@ -123,35 +123,37 @@
 
 
 		        	<!-- Step 4: Software Updates -->
-		        	<div>
-		        		<h3 class="m-b-md">Firmware Update</h3>
-		        		<p>Some Text Goes Here</p>
-		        		<div style="text-align:center;" class="checkbox">
-		        			<label>Install Console<input type="checkbox" name="console" id="consoleInstall" value="Console" style="margin-left:5px;" checked><br>
-		 					</label>
-		        		</div>
-		        		<div class="form-group row">
-			        		<button id="upgradeFirmwareButton" type="button" class="btn btn-success btn-block">Upgrade Firmware</button>
-			        	</div>
-		        		<div id="firwareButtonContainer" class="row">
-			        		<div class="col-sm-6">
-			        			<button id="firmwareBackButton" type="button" class = "btn btn-success btn-block">Back</button>
-			        		</div>
-			        		<div class="col-sm-6">
-			        			<button id="skipFirmwareStep" type="button" class="btn btn-success btn-block">Skip Step</button>
-			        		</div>
-		        		</div>
-		        		<progress id="download-progress" class="progress progress-striped progress-animated" value="0" max="0"></progress>
-		        		
-		        	</div>
-
+					<div>
+						<h3 class="m-b-md">Firmware Update</h3>
+						<p>Some Text Goes Here</p>
+						<div style="text-align:center;" class="checkbox">
+							<label>Install Console<input type="checkbox" name="console" id="consoleInstall" value="Console" style="margin-left:5px;" checked><br>
+							</label>
+						</div>
+						<div class="form-group row">
+							<button id="upgradeFirmwareButton" type="button" class="btn btn-success btn-block">Upgrade Firmware</button>
+						</div>
+						<div id="firwareButtonContainer" class="row">
+							<div class="col-sm-6">
+								<button id="firmwareBackButton" type="button" class = "btn btn-success btn-block">Back</button>
+							</div>
+							<div class="col-sm-6">
+								<button id="skipFirmwareStep" type="button" class="btn btn-success btn-block">Skip Step</button>
+							</div>
+						</div>		        		
+					</div>
+					
 		        	<!-- Step 5: Finished! -->
 		        	<div>
+						<div id="downloading">
+							<h3 class="m-b-md">Downloading Updates</h3>
+							<progress id="download-progress" class="progress progress-striped progress-animated" value="0" max="0"></progress>
+						</div>
 		        		<div id="upgrade-required">
 			        		<div id="loading" class="loading"></div>
 							<div id="warning" class="alert alert-danger m-t-lg" role="alert">
 								<p class="text-center"><strong>Warning: Do not power off the device during update.</strong></p>
-								<p class="text-center" id="time">04:00</p>
+								<progress id="time" class="progress progress-striped progress-animated" value="0" max="960"></progress>
 							</div>
 			        		<div id="success" class="alert alert-success" role="alert">
 								<p class="text-center"><strong>You have successfully set up your Omega!</strong></p>
