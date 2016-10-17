@@ -421,7 +421,14 @@
 		gotoStep(nextStep);
 	});
 
-	$('#setupCloudBackButton').click(function(){
+	// $('#setupCloudBackButton').click(function(){
+	// 	console.log("preStep",preStep);
+	// 	console.log("Back Button from the cloud setup gets called");
+	// 	gotoStep(preStep);
+	// });
+
+	$(document).on("click","#setupCloudBackButton",function(){
+		console.log("preStep",preStep);
 		console.log("Back Button from the cloud setup gets called");
 		gotoStep(preStep);
 	});
@@ -633,7 +640,9 @@
 							//If value is 1, the setup has been run before and all skip/back buttons except cloud reg are enabled.
 							$('#skipStepTestButton').css('display','block');
 							$('#skipFirmwareStep').css('display','block');
-							// $('#setupCloudBackButton').css('display','block');
+							$('#setupCloudBackButton').css('display','block');
+							$('#firmwareBackButton').css('display','block');
+
 
 							//Fuck it while we are at it, lets add the back buttons here too? Or should we always have back buttons?
 						}else{
