@@ -49,6 +49,32 @@
 
 		        	<!-- Step 2: Setup Wi-Fi -->
 		        	<div>
+					<div class="container" id="wifi-list">
+						<div class="card card-block">
+						
+
+							<div id="networkTable" class="list-group layout vertical end-justified">
+
+								<div class="list-group-item layout horizontal end">
+									<div>Connected Wi-Fi Networks</div>
+									<!-- <div class="flex"></div> -->
+									<!-- <div>Actions</div> -->
+								</div>
+
+								
+							</div>
+							<button id="wifi-add-network" class="btn btn-success btn-block">Add Wi-Fi Network</button>
+						</div>
+						<!-- <div class="row"> -->
+								<!-- <div class="col-sm-6"> -->
+									<!-- <button id="wifiBackButton" type="button" class ="btn btn-success btn-block" style="display:none;">Back</button> -->
+								<!-- </div> -->
+								<!-- <div class="col-sm-6"> -->
+									<!-- <button id="skipStepTestButton" type="button" class="btn btn-success btn-block">Skip Step</button> -->
+								<!-- </div> -->
+						<!-- </div> -->
+					</div>
+						<div id="wifi-connect">
 						<form id="wifi-form">
 							<div class="form-group row">
 								<label for="wifi-select" class="col-lg-4 col-md-4 col-sm-4 col-xs-4 form-control-label">Detected Networks</label>
@@ -89,9 +115,11 @@
 								</div>
 							</div>
 								<div class="form-group row">
-									<button id="wifi-config-button" type="submit" class="btn btn-success btn-block">Configure Wi-Fi</button>
+									<button id="wifi-config-button" type="submit" class="btn btn-success btn-block">Configure Wi-Fi <div id="wifi-loading" class="wifiLoad" style="display: none;"></div></button>
 								</div>
-							<div class="row">
+						</form>
+						</div>
+						<div class="row">
 								<div class="col-sm-6">
 									<button id="wifiBackButton" type="button" class ="btn btn-success btn-block" style="display:none;">Back</button>
 								</div>
@@ -99,7 +127,6 @@
 									<button id="skipStepTestButton" type="button" class="btn btn-success btn-block">Skip Step</button>
 								</div>
 							</div>
-						</form>
 		        	</div>
 
 		        	<!-- Step 3: Setup the cloud here -->
@@ -109,7 +136,31 @@
 		        		<p>Some Text Should go here</p>
 						<div id="cloudRegMessage"></div>
 						<div class="form-group row">
-			        		<button id="setupCloudButton" type="button" class="btn btn-success btn-block">Setup Cloud</button>
+			        		<!-- <button id="setupCloudButton" type="button" class="btn btn-success btn-block">Setup Cloud</button> -->
+							<!-- <button type="button" class="modal-open">Setup Cloud</button> -->
+								<!-- Trigger the modal with a button -->
+							<button type="button" class="btn btn-success btn-block" data-toggle="modal" data-target="#myModal">Setup Cloud</button>
+
+							<!-- Modal -->
+							<div id="myModal" class="modal fade" role="dialog" style="width100%;height:100%;">
+							  <div class="modal-dialog">
+
+								<!-- Modal content-->
+								<div class="modal-content">
+								  <!-- <div class="modal-header"> -->
+									<!-- <button type="button" class="close" data-dismiss="modal">&times;</button> -->
+									<!-- <h4 class="modal-title">Modal Header</h4> -->
+								  <!-- </div> -->
+								  <!-- <div class="modal-body"> -->
+									<iframe id="iframe" src="" frameborder="0" height="600px" width="600px"></iframe>
+								  <!-- </div> -->
+								  <!-- <div class="modal-footer"> -->
+									<!-- <button type="button" class="btn btn-default" data-dismiss="modal">Close</button> -->
+								  <!-- </div> -->
+								</div>
+
+							  </div>
+							</div>
 			        	</div>
 		        		<div class='row'>
 			        		<div class="col-sm-6">

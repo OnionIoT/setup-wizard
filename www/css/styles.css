@@ -192,6 +192,20 @@ Loading
     border-top: 7px solid #5cb85c;
     border-radius: 100%
 }
+.wifiLoad {
+    height: 5px;
+    width: 5px;
+    margin: auto;
+    -webkit-animation: rotate 1s infinite linear;
+    -moz-animation: rotate 1s infinite linear;
+    -o-animation: rotate 1s infinite linear;
+    animation: rotate 1s infinite linear;
+    border-left: 7px solid #5cb85c;
+    border-right: 7px solid #5cb85c;
+    border-bottom: 7px solid #5cb85c;
+    border-top: 7px solid #eee;
+    border-radius: 100%
+}
 
 .rotate {
 	-webkit-animation: rotate 1s infinite linear;
@@ -232,3 +246,20 @@ Loading
         transform: rotate(359deg)
     }
 }
+/*********************************
+Wifi
+**********************************/
+
+.container {
+			width: 500px;
+			margin: auto;
+		}
+		
+#network-id:hover {
+			background-color: #ecf0f1;
+		}
+		
+#network-icon {
+			float: right;
+			margin-right: 5px;
+		}

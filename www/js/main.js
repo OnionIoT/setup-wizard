@@ -306,20 +306,22 @@
 		$('#wifi-message > .alert').alert('close');
 			
 		var postCheck = function () {
-			clearInterval(animationInterval);
+			// clearInterval(animationInterval);
 			$('#wifi-config-button').html('Configure Wi-Fi');
 			$('#wifi-config-button').prop('disabled', false);
 			$('#skipStepTestButton').prop('disabled', false);
+			$('#wifi-loading').css('display','none');
 		};
 
 		$('#wifi-config-button').prop('disabled', true);
 		$('#skipStepTestButton').prop('disabled', true);
-		$('#wifi-config-button').html('Configuring');
+		$('#wifi-config-button').html('Configuring<div id="wifi-loading" class="wifiLoad" style="display: block;">');
+		//$('#wifi-loading').css('display','block');
 
-		var animationInterval = setInterval(function () {
-			var label = $('#wifi-config-button').html();
-			$('#wifi-config-button').html(label.length < 14 ? label + '.' : 'Configuring');
-		}, 1000);
+		// var animationInterval = setInterval(function () {
+			// var label = $('#wifi-config-button').html();
+			// $('#wifi-config-button').html(label.length < 14 ? label + '.' : 'Configuring');
+		// }, 1000);
 		
 		
 		if ($('#wifi-encryption').val() === 'psk2' || $('#wifi-encryption').val() === 'psk'){
@@ -356,11 +358,6 @@
 						clearTimeout(connectionCheckTimeout);
 						clearInterval(connectionCheckInterval);
 						
-						// sendUbusRequest('file', 'exec', {
-							// command: '/etc/init.d/device-client',
-							// params: ['restart']
-						// }, function () {
-						// Initiate firmware upgrade
 						console.log("Checking for upgrade");
 						sendUbusRequest('onion', 'oupgrade', {
 							params: {
@@ -404,7 +401,11 @@
 		console.log(preStep);
 		gotoStep(nextStep);
 	});
-
+	
+	$('#wifi-add-network').click(function(){
+		$('#wifi-list').hide();
+		$('#wifi-connect').show();
+	});
 
 	// ==================
 	// Step 3: Cloud Registration
@@ -446,6 +447,43 @@
 			$('#cloudErrorMsg').remove();
 		},15000);
 	};
+	
+	var receiveMessage = function (result) {
+		if (result.origin !== "http://localhost:8080")
+		return;
+	
+		sendUbusRequest('uci', 'set', {
+			config: 'onion',
+			section: 'cloud',
+			values: {
+				deviceId: result.data.content.deviceId,
+				secret: result.data.content.deviceSecret
+			}
+		}, function (result) {
+			console.log('uci set onion.cloud result:', result);
+			if (result.result[0] === 0) {
+				sendUbusRequest('uci', 'commit', {
+						config: 'onion'
+				}, function (result) {
+					if (result.result[0] === 0) {
+						console.log('cloud settings set');
+						sendUbusRequest('file', 'exec', {
+							command: '/etc/init.d/device-client',
+							params: ['restart']
+						}, function () {
+						$('.modal').modal('hide');
+						gotoStep(nextStep);
+						});
+					} else {
+						console.log('Unable to commit cloud settings.');
+					}
+				});
+			} else {
+				console.log('Unable to set cloud settings.');
+			}
+		});
+	}
+	
 
 	//======================
 	// Step 4: Firmware Update
@@ -585,6 +623,9 @@
 			},
 			init: function () {
 				// Check if the token is valid
+				$('#wifi-connect').hide();
+				$('#wifi-list').hide();
+				var savedWifiNetworks = [];
 				sendUbusRequest('system', 'info', {}, function (data) {
 					if (data.result && data.result.length === 2) {
 						$('#wifi-ssid').val('');
@@ -603,6 +644,27 @@
 				}, function (data){
 					if (data.result[1].code === 0) {
 						omegaOnline = true;
+						$('div').remove('#network-list');
+						$('#networkTable').append(" <div class='list-group-item layout horizontal end' id='network-list'></div> ");
+						sendUbusRequest('uci','get',{config:"wireless"},function(response){
+							$.each( response.result[1].values, function( key, value ) {
+								if(key==="radio0"){
+									return;
+								}
+								savedWifiNetworks.push(value);
+							});
+							$.each(savedWifiNetworks, function(key, value) {
+								if(value.mode === "ap")
+									return;
+								if(value.disabled !== '1'){
+									$('#network-list').append(" <div class='list-group-item layout horizontal end' id='network-id'><span>"+ value.ssid +"</span><span id='network-icon' class='glyphicons glyphicons-ok'></span></div> ");
+									return;
+								}
+								$('#network-list').append(" <div class='list-group-item layout horizontal end' id='network-id'><span>"+ value.ssid +"</span></div> ");
+							});
+						});
+						$('#wifi-connect').hide();
+						$('#wifi-list').show();
 						console.log('Already connected to the internet!')
 						sendUbusRequest('onion', 'oupgrade', {
 							params: {
@@ -614,6 +676,9 @@
 							fileSize = data.result[1].image.size;
 							$('#download-progress').prop('max', data.result[1].image.size);
 						});
+					} else {
+						$('#wifi-list').hide();
+						$('#wifi-connect').show();
 					}
 				});
 				
@@ -705,8 +770,8 @@
 			},
 			init: function(){
 				console.log("init function for the cloud registration step gets called here ");
-				$('#cloudLoading').css('display','block');
-				var devIdFound = false;
+   				$('#cloudLoading').css('display','none');
+/*				var devIdFound = false;
 				$('#setupCloudButton').attr("disabled",true);
 				$('#skipCloudReg').attr("disabled",true);
 				
@@ -738,10 +803,14 @@
 						showCloudRegMessage('Unable to register device with cloud. Try Again Later!');
 						return true;
 					}
-				},5000);
+				},5000); */
 				//Run a function to see if the device is setup with the cloud.
 				//If it is not, grey out the setupCloud Button and make it not clickable
 				//If it is, change its color.
+				
+				$('#iframe').attr('src','http://localhost:8080');
+				window.addEventListener("message", receiveMessage);
+
 			}
 
 		},
@@ -855,4 +924,5 @@
 
 		gotoStep(i - 1);
 	});
+
 })();
