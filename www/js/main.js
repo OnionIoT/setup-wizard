@@ -301,6 +301,15 @@
 		}
 	});
 
+	
+	
+	
+	
+	
+	
+	
+	
+
 	$('#wifi-form').submit(function (e) {
 		e.preventDefault();
 		$('#wifi-message > .alert').alert('close');
@@ -402,6 +411,13 @@
 		gotoStep(nextStep);
 	});
 	
+	$('#skipWifiButton').click(function(){
+		console.log("skipWifiButton gets called");
+		console.log("nextStep in skip TestButton is nextStep",nextStep);
+		console.log(preStep);
+		gotoStep(nextStep);
+	});
+	
 	$('#wifi-add-network').click(function(){
 		$('#wifi-list').hide();
 		$('#wifi-connect').show();
@@ -410,12 +426,12 @@
 	// ==================
 	// Step 3: Cloud Registration
 	//===================
-	$('#setupCloudButton').click(function(){
-		//Open the window.
-		var win = window.open("https://google.com");
+	// $('#setupCloudButton').click(function(){
+		// Open the window.
+		// var win = window.open("https://google.com");
 		// steps[3].init();
-		gotoStep(nextStep)
-	});
+		// gotoStep(nextStep)
+	// });
 
 	$('#skipCloudReg').click(function(){
 		// steps[3].init();
@@ -449,37 +465,82 @@
 	};
 	
 	var receiveMessage = function (result) {
-		if (result.origin !== "http://localhost:8080")
+		if (result.origin !== "https://registerdevice.onion.io")
 		return;
 	
-		sendUbusRequest('uci', 'set', {
-			config: 'onion',
-			section: 'cloud',
-			values: {
-				deviceId: result.data.content.deviceId,
-				secret: result.data.content.deviceSecret
-			}
-		}, function (result) {
-			console.log('uci set onion.cloud result:', result);
-			if (result.result[0] === 0) {
-				sendUbusRequest('uci', 'commit', {
-						config: 'onion'
-				}, function (result) {
-					if (result.result[0] === 0) {
-						console.log('cloud settings set');
-						sendUbusRequest('file', 'exec', {
-							command: '/etc/init.d/device-client',
-							params: ['restart']
-						}, function () {
-						$('.modal').modal('hide');
-						gotoStep(nextStep);
-						});
-					} else {
-						console.log('Unable to commit cloud settings.');
-					}
+		sendUbusRequest('uci', 'get', {
+				config:"onion",
+				section:"cloud"
+			}, function (response) {
+				if(response.result.length !== 2){
+				sendUbusRequest('uci', 'add', {
+					config: 'onion',
+					type: 'cloud',
+					name: 'cloud'
+				}, function () {
+					sendUbusRequest('uci', 'set', {
+						config: 'onion',
+						section: 'cloud',
+						values: {
+							deviceId: result.data.content.deviceId,
+							secret: result.data.content.deviceSecret
+						}
+					}, function (result) {
+						console.log('uci set onion.cloud result:', result);
+						if (result.result[0] === 0) {
+							sendUbusRequest('uci', 'commit', {
+									config: 'onion'
+							}, function (result) {
+								if (result.result[0] === 0) {
+									console.log('cloud settings set');
+									sendUbusRequest('file', 'exec', {
+										command: '/etc/init.d/device-client',
+										params: ['restart']
+									}, function () {
+									$('.modal').modal('hide');
+									gotoStep(nextStep);
+									});
+								} else {
+									console.log('Unable to commit cloud settings.');
+								}
+							});
+						} else {
+							console.log('Unable to set cloud settings.');
+						}
+					});
 				});
 			} else {
-				console.log('Unable to set cloud settings.');
+				console.log('Cloud settings added')
+				sendUbusRequest('uci', 'set', {
+					config: 'onion',
+					section: 'cloud',
+					values: {
+						deviceId: result.data.content.deviceId,
+						secret: result.data.content.deviceSecret
+					}
+				}, function (result) {
+					console.log('uci set onion.cloud result:', result);
+					if (result.result[0] === 0) {
+						sendUbusRequest('uci', 'commit', {
+								config: 'onion'
+						}, function (result) {
+							if (result.result[0] === 0) {
+								console.log('cloud settings set');
+								sendUbusRequest('file', 'exec', {
+									command: '/etc/init.d/device-client',
+									params: ['restart']
+								}, function () {
+								$('.modal').modal('hide');
+								gotoStep(nextStep);
+								});
+							} else {
+								console.log('Unable to commit cloud settings.');
+							}
+						});
+					} else {
+						console.log('Unable to set cloud settings.');
+					}
+				});
 			}
 		});
 	}
@@ -582,13 +643,13 @@
 			
 			$('#time').prop('value', time.toString());
 
-			if (time >= 960) {
+			if (time >= 2400) {
 				$('#loading').hide();
 				$('#warning').hide();
 				$('#success').show();
 				clearInterval(timerBar);
 			}
-		}, 250);
+		}, 100);
 		
 	}
 
@@ -625,6 +686,7 @@
 				// Check if the token is valid
 				$('#wifi-connect').hide();
 				$('#wifi-list').hide();
+				$('#wifiLoading').show();
 				var savedWifiNetworks = [];
 				sendUbusRequest('system', 'info', {}, function (data) {
 					if (data.result && data.result.length === 2) {
@@ -663,6 +725,7 @@
 								$('#network-list').append(" <div class='list-group-item layout horizontal end' id='network-id'><span>"+ value.ssid +"</span></div> ");
 							});
 						});
+						$('#wifiLoading').hide();
 						$('#wifi-connect').hide();
 						$('#wifi-list').show();
 						console.log('Already connected to the internet!')
@@ -695,6 +758,7 @@
 							console.log("Skip Buttons should be visible");
 							//If value is 1, the setup has been run before and all skip/back buttons except cloud reg are enabled.
 							$('#skipStepTestButton').css('display','block');
+							$('#skipWifiButton').css('display','block');
 							$('#skipFirmwareStep').css('display','block');
 							$('#setupCloudBackButton').css('display','block');
 							$('#firmwareBackButton').css('display','block');
@@ -705,6 +769,7 @@
 							console.log("Skip Buttons are hidden");
 							//If value is 0, the setup has NOT been run before and all skip buttons are disabled except for cloudSetup one. 
 							$('#skipStepTestButton').css('display','none');
+							$('#skipWifiButton').css('display','none');
 							$('#skipFirmwareStep').css('display','none');
 							console.log("About to hide the setupCloudBackButton");
 							$('#setupCloudBackButton').css('display','none');
@@ -716,6 +781,7 @@
 						console.log("Got a wack response from the ubus request, hid all skip buttons");
 						//If there is an error, assume it is a first time setup
 						$('#skipStepTestButton').css('display','none');
+						$('#skipWifiButton').css('display','none');
 						$('#skipFirmwareStep').css('display','none');
 						console.log("About to hide the setupCloudBackButton");
 						$('#setupCloudBackButton').css('display','none');
@@ -808,7 +874,7 @@
 				//If it is not, grey out the setupCloud Button and make it not clickable
 				//If it is, change its color.
 				
-				$('#iframe').attr('src','http://localhost:8080');
+				$('#iframe').attr('src','http://registerdevice.onion.io');
 				window.addEventListener("message", receiveMessage);
 
 			}
