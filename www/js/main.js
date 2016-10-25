@@ -874,7 +874,7 @@
 				//If it is not, grey out the setupCloud Button and make it not clickable
 				//If it is, change its color.
 				
-				$('#iframe').attr('src','http://registerdevice.onion.io');
+				$('#iframe').attr('src','https://registerdevice.onion.io');
 				window.addEventListener("message", receiveMessage);
 
 			}
