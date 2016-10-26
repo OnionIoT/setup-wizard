@@ -263,3 +263,25 @@ Wifi
 			float: right;
 			margin-right: 5px;
 		}
+		
+/*********************************
+Cloud
+**********************************/		
+		
+#iframe-div
+{
+    width    : 100vh;
+    height   : 100vh;
+    overflow : hidden;
+    position : relative;
+}
+ 
+#iframe
+{
+    position : absolute;
+    /* top      : -80px; */
+    left     : -365px;
+    /* width    : 1000px; */
+    /* height   : 1000px; */
+	/* margin   : 0 auto; */
+}
