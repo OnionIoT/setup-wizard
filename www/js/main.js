@@ -457,7 +457,7 @@
 	};
 	
 	var receiveMessage = function (result) {
-		if (result.origin !== "http://localhost:8080")
+		if (result.origin !== "https://registerdevice.onion.io")
 		return;
 	
 		sendUbusRequest('uci', 'get', {
@@ -900,7 +900,7 @@
 					}
 				});
 				
-				$('#iframe').attr('src','http://localhost:8080');
+				$('#iframe').attr('src','https://registerdevice.onion.io');
 				window.addEventListener("message", receiveMessage);
 
 			}
