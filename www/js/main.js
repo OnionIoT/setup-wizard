@@ -457,7 +457,7 @@
 	};
 	
 	var receiveMessage = function (result) {
-		if (result.origin !== "https://registerdevice.onion.io")
+		if (result.origin !== "http://localhost:8080")
 		return;
 	
 		sendUbusRequest('uci', 'get', {
@@ -574,7 +574,21 @@
 			}, 1000);
 		}
 	};
-
+	
+	var firmwareButtonText = function () {
+		if($('#consoleInstall').is(':checked') && upgradeRequired === 'true'){
+			$('#upgradeFirmwareButton').html('Upgrade Firmware and Install Console')
+		} else if($('#consoleInstall').is(':checked') && upgradeRequired === 'false'){
+			$('#upgradeFirmwareButton').html('Install Console')
+		} else if(upgradeRequired === 'true'){
+			$('#upgradeFirmwareButton').html('Upgrade Firmware')
+		} else {
+			$('#upgradeFirmwareButton').html('Finish Setup Wizard')
+		}
+	};
+	
+	$('#consoleInstall').click(firmwareButtonText);
+	
 	$('#upgradeFirmwareButton').click(function(){
 		isChecked = $('#consoleInstall').is(':checked');
 		console.log(isChecked);
@@ -583,7 +597,7 @@
 				config: 'onion',
 				section: 'console',
 				values: {
-					install: '1'
+					setup: '1'
 				}
 			}, function (result) {
 				console.log('uci set onion.console.setup result:', result);
@@ -717,10 +731,10 @@
 								$('#network-list').append(" <div class='list-group-item layout horizontal end' id='network-id'><span>"+ value.ssid +"</span></div> ");
 							});
 						});
-						$('#wifi-connect').hide();
-						$('#wifiLoading').hide();
-						$('#wifi-list').show();
-						$('#networkTable').show();
+						// $('#wifi-connect').hide();
+						// $('#wifiLoading').hide();
+						// $('#wifi-list').show();
+						// $('#networkTable').show();
 						console.log('Already connected to the internet!')
 						sendUbusRequest('onion', 'oupgrade', {
 							params: {
@@ -731,6 +745,10 @@
 							upgradeRequired = data.result[1].upgrade;
 							fileSize = data.result[1].image.size;
 							$('#download-progress').prop('max', data.result[1].image.size);
+							$('#wifi-connect').hide();
+							$('#wifiLoading').hide();
+							$('#wifi-list').show();
+							$('#networkTable').show();
 						});
 					} else {
 						// $('#wifi-list').hide();
@@ -870,7 +888,19 @@
 				//If it is not, grey out the setupCloud Button and make it not clickable
 				//If it is, change its color.
 				
-				$('#iframe').attr('src','https://registerdevice.onion.io');
+				
+				sendUbusRequest('uci','get',{config:"onion",section:"cloud"},function(response){
+					console.log(response);
+
+					if(response.result.length == 2){
+						if(response.result[1].values.secret !== "anonymous"){
+							$('#cloudText').html('<p> Device ID: ' + response.result[1].values.deviceId + '</p>');
+							$('#registerDeviceButton').html('Register device as new device');
+						}
+					}
+				});
+				
+				$('#iframe').attr('src','http://localhost:8080');
 				window.addEventListener("message", receiveMessage);
 
 			}
@@ -886,6 +916,7 @@
 				console.log("binDownloaded",binDownloaded);
 				$('#downloading').hide();
 				$('#download-complete').hide();
+				firmwareButtonText();
 			}
 		},
 		{
@@ -894,11 +925,19 @@
 			},
 			init: function () {
 				$('#success').hide();
-				sendUbusRequest('uci', 'set', {
+				
+				if (upgradeRequired === 'true' && isChecked) {
+					$('#upgrade-not-required').hide();
+					$('#install-console-only').hide();
+					$('#upgrade-required').hide();
+					$('#downloading').show();
+					$('#download-progress').prop('value', 0);
+					
+					sendUbusRequest('uci', 'set', {
 					config: 'onion',
 					section: 'console',
 					values: {
-						setup: '1'
+						install: '2'
 					}
 				}, function (result) {
 					console.log('uci set onion.console.setup result:', result);
@@ -916,14 +955,21 @@
 						console.log('Unable to edit console settings.');
 					}
 				});
-				if (upgradeRequired === 'true') {
+					
+					console.log("Upgrading");
+					sendUbusRequest('onion', 'oupgrade', {
+						params: {
+							force: ''
+						}
+					});
+					
+					checkDownload();
+				}else if(upgradeRequired === 'true' && !isChecked){
 					$('#upgrade-not-required').hide();
 					$('#install-console-only').hide();
 					$('#upgrade-required').hide();
 					$('#downloading').show();
 					$('#download-progress').prop('value', 0);
-					
-					
 					console.log("Upgrading");
 					sendUbusRequest('onion', 'oupgrade', {
 						params: {
@@ -935,6 +981,28 @@
 				} else {
 					binDownloaded = true;
 					if(isChecked){
+						sendUbusRequest('uci', 'set', {
+							config: 'onion',
+							section: 'console',
+							values: {
+								install: '1'
+							}
+						}, function (result) {
+							console.log('uci set onion.console.setup result:', result);
+							if (result.result[0] === 0) {
+								sendUbusRequest('uci', 'commit', {
+										config: 'onion'
+								}, function (result) {
+									if (result.result[0] === 0) {
+										console.log('console setup set');
+									} else {
+										console.log('Unable to edit console settings.');
+									}
+								});
+							} else {
+								console.log('Unable to edit console settings.');
+							}
+						});
 						$('#upgrade-required').hide();
 						$('#upgrade-not-required').hide();
 						$('#downloading').hide();

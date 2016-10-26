@@ -52,8 +52,6 @@
 						<div id="wifiLoading" class="loading"></div>
 						<div class="container" id="wifi-list">
 							<div class="card card-block">
-							
-
 								<div class="list-group layout vertical end-justified">
 									<div id="networkTable">
 										<div class="list-group-item layout horizontal end">
@@ -62,7 +60,6 @@
 											<!-- <div>Actions</div> -->
 										</div>
 									</div>
-									
 								</div>
 								<button type="button" class="btn btn-success btn-block" data-toggle="modal" data-target="#wifiModal">Add WiFi Network</button>
 							</div>
@@ -151,13 +148,13 @@
 
 		        	<div>
 		        		<div id="cloudLoading" class="loading"></div>
-		        		<p>Some Text Should go here</p>
+		        		<div id="cloudText"></div>
 						<div id="cloudRegMessage"></div>
 						<div class="form-group row">
 			        		<!-- <button id="setupCloudButton" type="button" class="btn btn-success btn-block">Setup Cloud</button> -->
 							<!-- <button type="button" class="modal-open">Setup Cloud</button> -->
 								<!-- Trigger the modal with a button -->
-							<button type="button" class="btn btn-success btn-block" data-toggle="modal" data-target="#myModal">Setup Cloud</button>
+							<button id="registerDeviceButton" type="button" class="btn btn-success btn-block" data-toggle="modal" data-target="#myModal">Register Device</button>
 
 							<!-- Modal -->
 							<div id="myModal" class="modal fade" role="dialog" style="width100%;height:100%;">
@@ -202,13 +199,13 @@
 						<div class="form-group row">
 							<button id="upgradeFirmwareButton" type="button" class="btn btn-success btn-block">Upgrade Firmware</button>
 						</div>
-						<div id="firwareButtonContainer" class="row">
+						<div id="firmwareButtonContainer" class="row">
 							<div class="col-sm-6">
 								<button id="firmwareBackButton" type="button" class = "btn btn-success btn-block">Back</button>
 							</div>
-							<div class="col-sm-6">
-								<button id="skipFirmwareStep" type="button" class="btn btn-success btn-block">Skip Step</button>
-							</div>
+							<!-- <div class="col-sm-6"> -->
+								<!-- <button id="skipFirmwareStep" type="button" class="btn btn-success btn-block">Skip Step</button> -->
+							<!-- </div> -->
 						</div>		        		
 					</div>
 					
