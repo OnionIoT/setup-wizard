@@ -309,118 +309,110 @@
 	
 	
 	
+	// $('#wifi-config-button').click(function (e) {
+		// e.preventDefault();
+		$('#wifi-form').submit(function (e) {
+			e.preventDefault();
+			$('#wifi-message > .alert').alert('close');
+				
+			var postCheck = function () {
+				// clearInterval(animationInterval);
+				$('#wifi-config-button').html('Configure Wi-Fi');
+				$('#wifi-config-button').prop('disabled', false);
+				$('#skipStepTestButton').prop('disabled', false);
+				$('#wifi-loading').css('display','none');
+			};
 
-	$('#wifi-form').submit(function (e) {
-		e.preventDefault();
-		$('#wifi-message > .alert').alert('close');
+			$('#wifi-config-button').prop('disabled', true);
+			$('#skipStepTestButton').prop('disabled', true);
+			$('#wifi-config-button').html('Configuring<div id="wifi-loading" class="wifiLoad" style="display: block;">');
+			//$('#wifi-loading').css('display','block');
+
+			// var animationInterval = setInterval(function () {
+				// var label = $('#wifi-config-button').html();
+				// $('#wifi-config-button').html(label.length < 14 ? label + '.' : 'Configuring');
+			// }, 1000);
 			
-		var postCheck = function () {
-			// clearInterval(animationInterval);
-			$('#wifi-config-button').html('Configure Wi-Fi');
-			$('#wifi-config-button').prop('disabled', false);
-			$('#skipStepTestButton').prop('disabled', false);
-			$('#wifi-loading').css('display','none');
-		};
-
-		$('#wifi-config-button').prop('disabled', true);
-		$('#skipStepTestButton').prop('disabled', true);
-		$('#wifi-config-button').html('Configuring<div id="wifi-loading" class="wifiLoad" style="display: block;">');
-		//$('#wifi-loading').css('display','block');
-
-		// var animationInterval = setInterval(function () {
-			// var label = $('#wifi-config-button').html();
-			// $('#wifi-config-button').html(label.length < 14 ? label + '.' : 'Configuring');
-		// }, 1000);
-		
-		
-		if ($('#wifi-encryption').val() === 'psk2' || $('#wifi-encryption').val() === 'psk'){
-			if($('#wifi-key').val().length < 8 || $('#wifi-key').val().length > 63){
-				if (checkOnlineRequest) {
-					checkOnlineRequest.abort();
-					checkOnlineRequest = null;
-				}
-				postCheck();
-				showWifiMessage('danger', 'Please enter a valid password. (WPA and WPA2 passwords are between 8 and 63 characters)');
-			}
 			
-		}else if($('#wifi-encryption').val() === 'wep'){
-			if($('#wifi-key').val().length !== 5){
-				if (checkOnlineRequest) {
-					checkOnlineRequest.abort();
-					checkOnlineRequest = null;
-				}
-				postCheck();
-				showWifiMessage('danger', 'Please enter a valid password. (WEP passwords are 5 or 13 characters long)');
-			}else if($('#wifi-key').val().length !== 13){
-				if (checkOnlineRequest) {
-					checkOnlineRequest.abort();
-					checkOnlineRequest = null;
-				}
-				postCheck();
-				showWifiMessage('danger', 'Please enter a valid password. (WEP passwords are 5 or 13 characters long)');
-			}
-		}
-		if(checkOnlineRequest !== null){
-			var connectionCheckInterval = setInterval(function () {
-				isOnline(function () {
-					if (omegaOnline) {
-						clearTimeout(connectionCheckTimeout);
-						clearInterval(connectionCheckInterval);
-						
-						console.log("Checking for upgrade");
-						sendUbusRequest('onion', 'oupgrade', {
-							params: {
-								check: ''
-							}
-						}, function (data) {
-							binName = data.result[1].image.local;
-							upgradeRequired = data.result[1].upgrade;
-							fileSize = data.result[1].image.size;
-							$('#download-progress').prop('max', data.result[1].image.size);
-							postCheck();
-							gotoStep(nextStep);
-						});
-					// });
+			if ($('#wifi-encryption').val() === 'psk2' || $('#wifi-encryption').val() === 'psk'){
+				if($('#wifi-key').val().length < 8 || $('#wifi-key').val().length > 63){
+					if (checkOnlineRequest) {
+						checkOnlineRequest.abort();
+						checkOnlineRequest = null;
 					}
-				});
-			}, 10000);
-
-			var connectionCheckTimeout = setTimeout(function () {
-				clearInterval(connectionCheckInterval);
-				if (checkOnlineRequest) {
-					checkOnlineRequest.abort();
-					checkOnlineRequest = null;
+					postCheck();
+					showWifiMessage('danger', 'Please enter a valid password. (WPA and WPA2 passwords are between 8 and 63 characters)');
 				}
+				
+			}else if($('#wifi-encryption').val() === 'wep'){
+				if($('#wifi-key').val().length !== 5){
+					if (checkOnlineRequest) {
+						checkOnlineRequest.abort();
+						checkOnlineRequest = null;
+					}
+					postCheck();
+					showWifiMessage('danger', 'Please enter a valid password. (WEP passwords are 5 or 13 characters long)');
+				}else if($('#wifi-key').val().length !== 13){
+					if (checkOnlineRequest) {
+						checkOnlineRequest.abort();
+						checkOnlineRequest = null;
+					}
+					postCheck();
+					showWifiMessage('danger', 'Please enter a valid password. (WEP passwords are 5 or 13 characters long)');
+				}
+			}
+			if(checkOnlineRequest !== null){
+				var connectionCheckInterval = setInterval(function () {
+					isOnline(function () {
+						if (omegaOnline) {
+							clearTimeout(connectionCheckTimeout);
+							clearInterval(connectionCheckInterval);
+							
+							console.log("Checking for upgrade");
+							sendUbusRequest('onion', 'oupgrade', {
+								params: {
+									check: ''
+								}
+							}, function (data) {
+								binName = data.result[1].image.local;
+								upgradeRequired = data.result[1].upgrade;
+								fileSize = data.result[1].image.size;
+								$('#download-progress').prop('max', data.result[1].image.size);
+								postCheck();
+								$('.modal').modal('hide');
+								gotoStep(nextStep);
+							});
+						// });
+						}
+					});
+				}, 10000);
 
-				postCheck();
-				showWifiMessage('warning', 'Unable to connect to ' + $('#wifi-ssid').val() + '. Please try again.');
-			}, 60000);
-			
-			
-			//Connect to the network
-			addWirelessNetwork();
-			setupWifiNetwork($('#wifi-ssid').val(), $('#wifi-key').val(), $('#wifi-encryption').val());
+				var connectionCheckTimeout = setTimeout(function () {
+					clearInterval(connectionCheckInterval);
+					if (checkOnlineRequest) {
+						checkOnlineRequest.abort();
+						checkOnlineRequest = null;
+					}
 
-		}
-	});
+					postCheck();
+					showWifiMessage('warning', 'Unable to connect to ' + $('#wifi-ssid').val() + '. Please try again.');
+				}, 60000);
+				
+				
+				//Connect to the network
+				addWirelessNetwork();
+				setupWifiNetwork($('#wifi-ssid').val(), $('#wifi-key').val(), $('#wifi-encryption').val());
 
-	$('#skipStepTestButton').click(function(){
-		console.log("skipStepTestButton gets called");
-		console.log("nextStep in skip TestButton is nextStep",nextStep);
-		console.log(preStep);
-		gotoStep(nextStep);
+			}
+		// });
 	});
 	
 	$('#skipWifiButton').click(function(){
-		console.log("skipWifiButton gets called");
-		console.log("nextStep in skip TestButton is nextStep",nextStep);
-		console.log(preStep);
-		gotoStep(nextStep);
-	});
-	
-	$('#wifi-add-network').click(function(){
-		$('#wifi-list').hide();
-		$('#wifi-connect').show();
+			console.log("skipWifiButton gets called");
+			console.log("nextStep in skip TestButton is nextStep",nextStep);
+			console.log(preStep);
+			gotoStep(nextStep);
+
 	});
 
 	// ==================
@@ -699,7 +691,7 @@
 				});
 
 				
-				//Check if already connected to internet. If yes, perform oupgrade check.
+				//Check if already connected to internet. If yes, show configured networks.
 				sendUbusRequest('file', 'exec', {
 					command: 'wget',
 					params: ['--spider', 'http://repo.onion.io/omega2/images']
@@ -725,9 +717,10 @@
 								$('#network-list').append(" <div class='list-group-item layout horizontal end' id='network-id'><span>"+ value.ssid +"</span></div> ");
 							});
 						});
-						$('#wifiLoading').hide();
 						$('#wifi-connect').hide();
+						$('#wifiLoading').hide();
 						$('#wifi-list').show();
+						$('#networkTable').show();
 						console.log('Already connected to the internet!')
 						sendUbusRequest('onion', 'oupgrade', {
 							params: {
@@ -740,8 +733,11 @@
 							$('#download-progress').prop('max', data.result[1].image.size);
 						});
 					} else {
-						$('#wifi-list').hide();
-						$('#wifi-connect').show();
+						// $('#wifi-list').hide();
+						$('#wifi-list').show();
+						$('#wifiLoading').hide();
+						$('#networkTable').hide();
+						// $('#wifi-connect').show();
 					}
 				});
 				
