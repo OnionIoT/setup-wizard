@@ -281,7 +281,7 @@
 				if (returnCode === 0 && data.result[1].results.length !== 0) {
 					availableWifiNetworks = data.result[1].results;
 					
-					showScanMessageModal('Choose Wi-Fi Network:');
+					showScanMessage('Choose Wi-Fi Network:');
 
 					for (var i = 0; i < availableWifiNetworks.length; i++) {
 						if (availableWifiNetworks[i].ssid) {
@@ -383,7 +383,6 @@
 		$('#wifi-config-button').prop('disabled', true);
 		$('#skipStepTestButton').prop('disabled', true);
 		$('#wifi-config-button').html('Configuring<div id="wifi-loading" class="wifiLoad" style="display: block;">');
-		//$('#wifi-loading').css('display','block');
 
 		// var animationInterval = setInterval(function () {
 			// var label = $('#wifi-config-button').html();
@@ -450,9 +449,8 @@
 					checkOnlineRequest.abort();
 					checkOnlineRequest = null;
 				}
-
-				postCheck();
-				showWifiMessage('warning', 'Unable to connect to ' + $('#wifi-ssid').val() + '. Please try again.');
+					postCheck();
+					showWifiMessage('warning', 'Unable to connect to ' + $('#wifi-ssid').val() + '. Please try again.');
 			}, 60000);
 			
 			
@@ -477,7 +475,7 @@
 
 		$('#wifi-config-button-modal').prop('disabled', true);
 		$('#skipStepTestButton').prop('disabled', true);
-		$('#wifi-config-button-modal').html('Configuring<div id="wifi-loading" class="wifiLoad" style="display: block;">');
+		$('#wifi-config-button-modal').html('Connecting<div id="wifi-loading" class="wifiLoad" style="display: block;">');
 		//$('#wifi-loading').css('display','block');
 
 		// var animationInterval = setInterval(function () {
@@ -545,9 +543,8 @@
 					checkOnlineRequest.abort();
 					checkOnlineRequest = null;
 				}
-
-				postCheck();
-				showWifiMessage('warning', 'Unable to connect to ' + $('#wifi-ssid-modal').val() + '. Please try again.');
+					postCheck();
+					showWifiMessage('warning', 'Unable to connect to ' + $('#wifi-ssid').val() + '. Please try again.');
 			}, 60000);
 			
 			
@@ -565,16 +562,110 @@
 			gotoStep(nextStep);
 
 	});
+	
+	var changeNetwork = function (index, currentIndex, connected) {
+		sendUbusRequest('uci', 'set', {
+			config: 'wireless',
+			section: savedWifiNetworks[currentIndex][".name"],
+			values: {
+				disabled: '1'
+			}
+		}, function(response){
+			if(response.result[0] === 0){
+				sendUbusRequest('uci', 'set', {
+					config: 'wireless',
+					section: savedWifiNetworks[index][".name"],
+					values: {
+						disabled: '0'
+					}
+				}, function(response){
+					sendUbusRequest('uci', 'commit', {
+							config: 'wireless'
+					}, function (response){
+						if(connected){
+							deleteNetwork(currentNetworkIndex);
+						}else{
+							refreshNetworkList();
+						}
+						currentNetworkIndex = index;
+						sendUbusRequest('file', 'exec', {
+							command: 'wifimanager',
+							params: []
+						});
+					});
+				});
+			}
+		});
+	}
+	
+	var deleteNetwork = function(index) {
+		sendUbusRequest('uci', 'delete', {
+			config: 'wireless',
+			section: savedWifiNetworks[index][".name"]
+		}, function(response){
+			if(response.result[0] === 0){
+				sendUbusRequest('uci', 'commit', {
+						config: 'wireless'
+				}, function(response){
+					refreshNetworkList();
+					sendUbusRequest('file', 'exec', {
+						command: 'wifimanager',
+						params: []
+					});
+				});
+			}
+		});
+	}
+	
+	var refreshNetworkList = function () {
+		savedWifiNetworks = [];
+		$('div').remove('#network-list');
+		$('#networkTable').append(" <div class='list-group-item layout horizontal end' id='network-list'></div> ");
+		sendUbusRequest('uci','get',{config:"wireless"},function(response){
+			$.each( response.result[1].values, function( key, value ) {
+				savedWifiNetworks.push(value);
+			});
+			$.each(savedWifiNetworks, function(key, value) {
+				if(value.mode !== "sta")
+					return;
+				if(value.disabled !== '1'){
+					currentNetworkIndex = Number(value['.index']);
+					$('#network-list').append(" <div class='list-group-item layout horizontal end'><span id='connectedNetwork'class='glyphicons glyphicons-wifi'></span><span>"+ value.ssid +"</span><div id='" + value['.index'] + "'><a class='glyphicons glyphicons-remove' href='#' data-toggle='tooltip' title='Delete Network'></a></div></div>");
+					return;
+				}
+				$('#network-list').append(" <div class='list-group-item layout horizontal end'><span class='glyphicons glyphicons-wifi'></span><span>"+ value.ssid +"</span><div id='" + value['.index'] + "'><a class='glyphicons glyphicons-remove' href='#' data-toggle='tooltip' title='Delete Network'></a><a class='glyphicons glyphicons-ok' href='#' data-toggle='tooltip' title='Enable Network'></a></div></div> ");
+			});
+		});
+		$('#wifi-list').show();
+		$('#wifiLoading').hide();
+	}
+	
+	$('#networkTable').on('click', '.glyphicons-ok', function() {
+		$('#wifi-list').hide();
+		$('#wifiLoading').show();
+		var index = Number($('.glyphicons-ok').closest('div').prop('id'));
+		changeNetwork(index, currentNetworkIndex, false);
+	});
+	
+	$('#networkTable').on('click', '.glyphicons-remove', function() {
+		$('#wifi-list').hide();
+		$('#wifiLoading').show();
+		var index = Number($('.glyphicons-remove').closest('div').prop('id'));
+		if(index === currentNetworkIndex && savedWifiNetworks[index+1]){
+			changeNetwork(index+1, currentNetworkIndex, true);
+		} else {
+			deleteNetwork(index);
+		}
+	});
+	
 
 	// ==================
 	// Step 3: Cloud Registration
 	//===================
-	// $('#setupCloudButton').click(function(){
+	$('#openCloudButton').click(function(){
 		// Open the window.
-		// var win = window.open("https://google.com");
-		// steps[3].init();
-		// gotoStep(nextStep)
-	// });
+		var win = window.open("https://cloud.onion.io");
+	});
 
 	$('#skipCloudReg').click(function(){
 		// steps[3].init();
@@ -593,24 +684,27 @@
 	// 	gotoStep(preStep);
 	// });
 
-	var showCloudRegMessage = function (message) {
-		$('#cloudRegMessage').append($('<div id="cloudErrorMsg" class="alert alert-warning alert-dismissible fade in" role="alert"> \
-			<button type="button" class="close" data-dismiss="alert" aria-label="Close"> \
-				<span aria-hidden="true">&times;</span> \
-				<span class="sr-only">Close</span> \
-			</button> \
-			<strong>Error:</strong> ' + message + ' \
-		</div>'));
+	// var showCloudRegMessage = function (message) {
+		// $('#cloudRegMessage').append($('<div id="cloudErrorMsg" class="alert alert-warning alert-dismissible fade in" role="alert"> \
+			// <button type="button" class="close" data-dismiss="alert" aria-label="Close"> \
+				// <span aria-hidden="true">&times;</span> \
+				// <span class="sr-only">Close</span> \
+			// </button> \
+			// <strong>Error:</strong> ' + message + ' \
+		// </div>'));
 
-		setTimeout(function(){
-			$('#cloudErrorMsg').remove();
-		},15000);
-	};
+		// setTimeout(function(){
+			// $('#cloudErrorMsg').remove();
+		// },15000);
+	// };
 	
+	
+	//Get deviceId and Secret from modal window app
 	var receiveMessage = function (result) {
 		if (result.origin !== "https://registerdevice.onion.io")
 		return;
-	
+		
+		//Checking to see if cloud section exists in config files
 		sendUbusRequest('uci', 'get', {
 				config:"onion",
 				section:"cloud"
@@ -621,6 +715,7 @@
 					type: 'cloud',
 					name: 'cloud'
 				}, function () {
+					//Setting values in config file to the values from modal window
 					sendUbusRequest('uci', 'set', {
 						config: 'onion',
 						section: 'cloud',
@@ -726,24 +821,31 @@
 		}
 	};
 	
-	var firmwareButtonText = function () {
+	//Updates text on upgrade page based on if upgrade is required or if the console is going to be installed
+	var firmwareText = function () {
 		if($('#consoleInstall').is(':checked') && upgradeRequired === 'true'){
-			$('#upgradeFirmwareButton').html('Upgrade Firmware and Install Console')
+			$('#upgradeFirmwareButton').html('Upgrade Firmware and Install Console');
+			$('#firmwareText').html('<p>Update your Omega to the latest and greatest firmware to get all the newest software goodies from Onion.</p>');
+			$('#consoleText').html('<p>The Onion Console is a web-based virtual desktop for the Omega that allows you to easily change settings and can be used as an IDE.</p>');
 		} else if($('#consoleInstall').is(':checked') && upgradeRequired === 'false'){
-			$('#upgradeFirmwareButton').html('Install Console')
+			$('#upgradeFirmwareButton').html('Install Console');
+			$('#firmwareText').html('<p>Your Omega is up to date!</p>');
+			$('#consoleText').html('<p>The Onion Console is a web-based virtual desktop for the Omega that allows you to easily change settings and can be used as an IDE.</p>');
 		} else if(upgradeRequired === 'true'){
-			$('#upgradeFirmwareButton').html('Upgrade Firmware')
+			$('#upgradeFirmwareButton').html('Upgrade Firmware');
+			$('#firmwareText').html('<p>Update your Omega to the latest and greatest firmware to get all the latest software goodies from Onion.</p>');
+			// $('#consoleText').html('');
 		} else {
-			$('#upgradeFirmwareButton').html('Finish Setup Wizard')
+			$('#upgradeFirmwareButton').html('Finish Setup Wizard');
+			$('#firmwareText').html('<p>Your Omega is up to date!</p>');
+			// $('#consoleText').html('');
 		}
 	};
 	
-	$('#consoleInstall').click(firmwareButtonText);
+	$('#consoleInstall').click(firmwareText);
 	
 	$('#upgradeFirmwareButton').click(function(){
 		isChecked = $('#consoleInstall').is(':checked');
-		console.log(isChecked);
-		// Do Something with this info. Change some uci setting.
 		sendUbusRequest('uci', 'set', {
 				config: 'onion',
 				section: 'console',
@@ -817,7 +919,8 @@
 	var currentStep = 0;
 	var nextStep;
 	var preStep;
-
+	var savedWifiNetworks = [];
+	var currentNetworkIndex;
 
 	var steps = [
 		{
@@ -840,11 +943,11 @@
 				return false;
 			},
 			init: function () {
-				// Check if the token is valid
+				$('[data-toggle="tooltip"]').tooltip(); 
 				$('#wifi-connect').hide();
 				$('#wifi-list').hide();
 				$('#wifiLoading').show();
-				var savedWifiNetworks = [];
+				
 				sendUbusRequest('system', 'info', {}, function (data) {
 					if (data.result && data.result.length === 2) {
 						$('#wifi-ssid').val('');
@@ -857,32 +960,15 @@
 				});
 
 				
-				//Check if already connected to internet. If yes, show configured networks.
+				//Check if already connected to internet. If yes, show configured networks; otherwise, show configure wifi page.
 				sendUbusRequest('file', 'exec', {
 					command: 'wget',
 					params: ['--spider', 'http://repo.onion.io/omega2/images']
 				}, function (data){
 					if (data.result[1].code === 0) {
 						omegaOnline = true;
-						$('div').remove('#network-list');
-						$('#networkTable').append(" <div class='list-group-item layout horizontal end' id='network-list'></div> ");
-						sendUbusRequest('uci','get',{config:"wireless"},function(response){
-							$.each( response.result[1].values, function( key, value ) {
-								if(key==="radio0"){
-									return;
-								}
-								savedWifiNetworks.push(value);
-							});
-							$.each(savedWifiNetworks, function(key, value) {
-								if(value.mode === "ap")
-									return;
-								if(value.disabled !== '1'){
-									$('#network-list').append(" <div class='list-group-item layout horizontal end' id='network-id'><span>"+ value.ssid +"</span><span id='network-icon' class='glyphicons glyphicons-ok'></span></div> ");
-									return;
-								}
-								$('#network-list').append(" <div class='list-group-item layout horizontal end' id='network-id'><span>"+ value.ssid +"</span></div> ");
-							});
-						});
+						
+						refreshNetworkList();
 						// $('#wifi-connect').hide();
 						// $('#wifiLoading').hide();
 						// $('#wifi-list').show();
@@ -925,7 +1011,8 @@
 							//If value is 1, the setup has been run before and all skip/back buttons except cloud reg are enabled.
 							$('#skipStepTestButton').css('display','block');
 							$('#skipWifiButton').css('display','block');
-							$('#skipFirmwareStep').css('display','block');
+							// $('#skipFirmwareStep').css('display','block');
+							// $('#skipCloudReg').css('display','block');
 							$('#setupCloudBackButton').css('display','block');
 							$('#firmwareBackButton').css('display','block');
 
@@ -936,7 +1023,8 @@
 							//If value is 0, the setup has NOT been run before and all skip buttons are disabled except for cloudSetup one. 
 							$('#skipStepTestButton').css('display','none');
 							$('#skipWifiButton').css('display','none');
-							$('#skipFirmwareStep').css('display','none');
+							// $('#skipFirmwareStep').css('display','none');
+							// $('#skipCloudReg').css('display','none');
 							console.log("About to hide the setupCloudBackButton");
 							$('#setupCloudBackButton').css('display','none');
 							console.log("Hiding setupCloudBackButton");
@@ -948,7 +1036,8 @@
 						//If there is an error, assume it is a first time setup
 						$('#skipStepTestButton').css('display','none');
 						$('#skipWifiButton').css('display','none');
-						$('#skipFirmwareStep').css('display','none');
+						// $('#skipFirmwareStep').css('display','none');
+						// $('#skipCloudReg').css('display','none');
 						console.log("About to hide the setupCloudBackButton");
 						$('#setupCloudBackButton').css('display','none');
 						console.log("Hiding setupCloudBackButton");
@@ -1047,14 +1136,22 @@
 					if(response.result.length == 2){
 						//If the secret is not anonymous then display the device ID and write change the registerDeviceButton text
 						if(response.result[1].values.secret !== "anonymous"){
-							$('#cloudText').html('<p> Device ID: ' + response.result[1].values.deviceId + '</p>');
-							$('#registerDeviceButton').html('Register device as new device');
+							$('#cloudText').html('<p>Your device is registered with the onion cloud. Check out <a href="http://cloud.onion.io/" target="_blank">cloud.onion.io</a> to get started!</p>');
+							$('#deviceId-list').css('display','block');
+							$('#deviceId').html(response.result[1].values.deviceId);
+							
+							$('#cloudRegMessage').html('You can register your device again on the cloud.');
+							$('#registerDeviceButton').html('Register device again as a new device');
+						}
+						else {
+							$('#deviceId-list').css('display','none');
 						}
 					}
 				});
 				
+				//Add iframe source on load
 				$('#iframe').attr('src','https://registerdevice.onion.io');
-				window.addEventListener("message", receiveMessage);
+				window.addEventListener("message", receiveMessage); //Listening for message from modal
 
 			}
 
@@ -1069,7 +1166,7 @@
 				console.log("binDownloaded",binDownloaded);
 				$('#downloading').hide();
 				$('#download-complete').hide();
-				firmwareButtonText();
+				firmwareText();
 			}
 		},
 		{
@@ -1090,7 +1187,7 @@
 					config: 'onion',
 					section: 'console',
 					values: {
-						install: '2'
+						install: '2' //install = 2 means that the install console package runs on reboot after the firmware update
 					}
 				}, function (result) {
 					console.log('uci set onion.console.setup result:', result);
@@ -1138,7 +1235,7 @@
 							config: 'onion',
 							section: 'console',
 							values: {
-								install: '1'
+								install: '1' //Install = 1 means that no firmware upgrade is required.
 							}
 						}, function (result) {
 							console.log('uci set onion.console.setup result:', result);

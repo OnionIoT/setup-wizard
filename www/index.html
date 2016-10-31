@@ -41,7 +41,7 @@
 
 									<div id="login-message"></div>
 
-									<button type="submit" class="btn btn-success">Log In</button>
+									<button type="submit" class="btn btn-info">Log In</button>
 								</form>
 							</div>
 						</div>
@@ -91,40 +91,38 @@
 									</div>
 								</div>
 									<div class="form-group row">
-										<button id="wifi-config-button" type="submit" class="btn btn-success btn-block">Configure WiFi</button>
+										<button id="wifi-config-button" type="submit" class="btn btn-info btn-block">Configure WiFi</button>
 									</div>
-									<div class="row">
+								<div class="row">
 									<div class="col-sm-6">
-										<button id="wifiBackButton" type="button" class ="btn btn-success btn-block" style="display:none;">Back</button>
+										<button id="wifiBackButton" type="button" class ="btn btn-secondary btn-block moveLeft" style="display:none;">< Back</button>
 									</div>
 									<div class="col-sm-6">
-										<button id="skipStepTestButton" type="button" class="btn btn-success btn-block">Skip Step</button>
+										<button id="skipStepTestButton" type="button" class="btn btn-secondary btn-block moveRight">Skip Step > </button>
 									</div>
-									</div>
+								</div>
 							</form>
 						</div>
 						<div class="container" id="wifi-list">
-							<div class="card card-block">
-							
-
-								<div class="list-group layout vertical end-justified">
-									<div id="networkTable">
-										<div class="list-group-item layout horizontal end">
-											<div>Configured WiFi Networks</div>
-											<!-- <div class="flex"></div> -->
-											<!-- <div>Actions</div> -->
-										</div>
+							<div class="list-group layout vertical end-justified">
+								<div id="networkTable">
+									<div class="list-group-item layout horizontal end">
+										<div>Configured WiFi Networks</div>
+										<!-- <div class="flex"></div> -->
+										<!-- <div>Actions</div> -->
 									</div>
-									
 								</div>
-								<button type="button" class="btn btn-success btn-block" data-toggle="modal" data-target="#wifiModal">Add WiFi Network</button>
+									
 							</div>
+								<div class="row">
+								<button type="button" id="addWifiButton" class="btn btn-info btn-block" data-toggle="modal" data-target="#wifiModal">Add WiFi Network</button>
+								</div>
 							<div class="row">
 									<div class="col-sm-6">
-										<button id="wifiBackButton" type="button" class ="btn btn-success btn-block" style="display:none;">Back</button>
+										<button id="wifiBackButton" type="button" class ="btn btn-secondary btn-block moveLeft" style="display:none;">< Back</button>
 									</div>
 									<div class="col-sm-6">
-										<button id="skipWifiButton" type="button" class="btn btn-success btn-block">Skip Step</button>
+										<button id="skipWifiButton" type="button" class="btn btn-secondary btn-block moveRight">Skip Step ></button>
 									</div>
 							</div>
 						</div>
@@ -176,7 +174,7 @@
 										</div>
 											<!-- <div class="form-group row"> -->
 											<div class="modal-footer">
-												<button id="wifi-config-button-modal" type="submit" class="btn btn-success btn-block">Configure WiFi</button>
+												<button id="wifi-config-button-modal" type="submit" class="btn btn-info btn-block">Connect to Network</button>
 											</div>
 											<!-- <div class="row"> -->
 											<!-- <div class="col-sm-6"> -->
@@ -204,13 +202,24 @@
 
 		        	<div>
 		        		<div id="cloudLoading" class="loading"></div>
-		        		<div id="cloudText"></div>
+		        		<div id="cloudText"><p>Register your Omega on the Onion Cloud.</p>
+						<p>Using the Onion Cloud, you can remotely manage and control your device, use the Cloud Compile service, and use apps to interact with your device.</p></div>
+						<div id="deviceId-list" style="display:none;">
+							<table class="table table-bordered">
+								<thead>
+								  <tr>
+									<th>Device Id</th>
+									<th id="deviceId"></th>
+								  </tr>
+								</thead>
+						  </table>
+						</div>
 						<div id="cloudRegMessage"></div>
 						<div class="form-group row">
 			        		<!-- <button id="setupCloudButton" type="button" class="btn btn-success btn-block">Setup Cloud</button> -->
 							<!-- <button type="button" class="modal-open">Setup Cloud</button> -->
 								<!-- Trigger the modal with a button -->
-							<button id="registerDeviceButton" type="button" class="btn btn-success btn-block" data-toggle="modal" data-target="#myModal">Register Device on Cloud</button>
+							<button id="registerDeviceButton" type="button" class="btn btn-info btn-block" data-toggle="modal" data-target="#myModal">Register Device on Cloud</button>
 
 							<!-- Modal -->
 							<div id="myModal" class="modal fade" role="dialog" style="width100%;height:100%;">
@@ -235,10 +244,10 @@
 			        	</div>
 		        		<div class='row'>
 			        		<div class="col-sm-6">
-			        			<button id="setupCloudBackButton" type="button" class ="btn btn-success btn-block">Back</button>
+			        			<button id="setupCloudBackButton" type="button" class ="btn btn-secondary btn-block moveLeft">< Back</button>
 			        		</div>
 		        			<div class="col-sm-6">
-			        			<button id="skipCloudReg" type="button" class="btn btn-success btn-block">Skip Step</button>
+			        			<button id="skipCloudReg" type="button" class="btn btn-secondary btn-block moveRight">Skip Step ></button>
 			        		</div>
 		        		</div>
 		        	</div>
@@ -246,40 +255,43 @@
 
 		        	<!-- Step 4: Software Updates -->
 					<div>
-						<h3 class="m-b-md">Firmware Update</h3>
-						<p>Some Text Goes Here</p>
+						<!-- <h3 class="m-b-md">Firmware Update</h3> -->
+						<div id="firmwareText"></div>
 						<div style="text-align:center;" class="checkbox">
 							<label>Install Console<input type="checkbox" name="console" id="consoleInstall" value="Console" style="margin-left:5px;" checked><br>
 							</label>
 						</div>
+						<div id="consoleText"></div>
 						<div class="form-group row">
-							<button id="upgradeFirmwareButton" type="button" class="btn btn-success btn-block">Upgrade Firmware</button>
+							<button id="upgradeFirmwareButton" type="button" class="btn btn-info btn-block">Upgrade Firmware</button>
 						</div>
 						<div id="firwareButtonContainer" class="row">
 							<div class="col-sm-6">
-								<button id="firmwareBackButton" type="button" class = "btn btn-success btn-block">Back</button>
+								<button id="firmwareBackButton" type="button" class = "btn btn-secondary btn-block moveLeft">< Back</button>
 							</div>
-							<div class="col-sm-6">
-								<button id="skipFirmwareStep" type="button" class="btn btn-success btn-block">Skip Step</button>
-							</div>
+							<!-- <div class="col-sm-6"> -->
+								<!-- <button id="skipFirmwareStep" type="button" class="btn btn-success btn-block">Skip Step</button> -->
+							<!-- </div> -->
 						</div>		        		
 					</div>
 					
 		        	<!-- Step 5: Finished! -->
 		        	<div>
 						<div id="downloading">
-							<h3 class="m-b-md">Downloading Updates</h3>
+							<h4 class="m-b-md">The Omega is downloading the latest firmware, sit tight!</h4>
 							<progress id="download-progress" class="progress progress-striped progress-animated" value="0" max="0"></progress>
 						</div>
 		        		<div id="upgrade-required">
-			        		<div id="loading" class="loading"></div>
+							<progress id="time" class="progress progress-striped progress-animated" value="0" max="2400"></progress>
 							<div id="warning" class="alert alert-danger m-t-lg" role="alert">
-								<p class="text-center"><strong>Warning: Do not power off the device during update.</strong></p>
-								<progress id="time" class="progress progress-striped progress-animated" value="0" max="2400"></progress>
+								<p class="text-center">The firmware upgrade has started! Please be patient while the Omega updates and finalizes configuration, this can take up to 3 minutes.</p>
+								<p class="text-center">Once completed, the Omega will reboot automatically.</p>
+								<p class="text-center"><strong>Do NOT unplug the Omega during this process.</strong></p>
+								<p class="text-center">Once the update is complete, your Omega will stop flashing.</p>
 							</div>
 			        		<div id="success" class="alert alert-success" role="alert">
 								<p class="text-center"><strong>You have successfully set up your Omega!</strong></p>
-								<p>You can now safely exit the Setup Wizard.</p>
+								<p class="text-center">You can now safely exit the Setup Wizard and start using your Omega</p>
 							</div>
 						</div>
 						<div id="upgrade-not-required">
@@ -296,7 +308,7 @@
 						</div>
 						<div class="row">
 							<div class="col-sm-6">
-								<button id="completeBackButton" type="button" class="btn btn-success btn-block">Back</button>
+								<button id="completeBackButton" type="button" class="btn btn-secondary btn-block moveLeft">< Back</button>
 							</div>
 						</div>
 		        	</div>

@@ -150,11 +150,11 @@ Progress Indicator
 }
 
 #steps-indicator > li.completed {
-    color: #5cb85c;
+    color: #81476d;
 }
 	#steps-indicator > li.completed:before,
 	#steps-indicator > li.completed:after {
-	    background-color: #5cb85c;
+	    background-color: #81476d;
 	}
 
 
@@ -189,7 +189,7 @@ Loading
     border-left: 7px solid #eee;
     border-right: 7px solid #eee;
     border-bottom: 7px solid #eee;
-    border-top: 7px solid #5cb85c;
+    border-top: 7px solid #81476d;
     border-radius: 100%
 }
 .wifiLoad {
@@ -200,9 +200,9 @@ Loading
     -moz-animation: rotate 1s infinite linear;
     -o-animation: rotate 1s infinite linear;
     animation: rotate 1s infinite linear;
-    border-left: 7px solid #5cb85c;
-    border-right: 7px solid #5cb85c;
-    border-bottom: 7px solid #5cb85c;
+    border-left: 7px solid #5bc0de;
+    border-right: 7px solid #5bc0de;
+    border-bottom: 7px solid #5bc0de;
     border-top: 7px solid #eee;
     border-radius: 100%
 }
@@ -255,13 +255,37 @@ Wifi
 			margin: auto;
 		}
 		
-#network-id:hover {
-			background-color: #ecf0f1;
-		}
 		
-#network-icon {
+#connectedNetwork {
+			color: #008eff;
+		}
+
+.glyphicons-wifi {
+			color: #bebebe;
+			margin-right: 10px;
+		}
+
+.glyphicons-ok {
+			position: relative;
+			top: -20px;
 			float: right;
 			margin-right: 5px;
+			color: #000000;
+		}
+.glyphicons-ok:hover {
+			color: #ffbf00;
+		}
+		
+.glyphicons-remove {
+			position: relative;
+			top: -20px;
+			float: right;
+			margin-right: 10px;
+			color: #000000;
+		}
+		
+.glyphicons-remove:hover {
+			color: #ffbf00;
 		}
 		
 /*********************************
@@ -279,9 +303,33 @@ Cloud
 #iframe
 {
     position : absolute;
-    /* top      : -80px; */
     left     : -350px;
-    /* width    : 1000px; */
-    /* height   : 1000px; */
-	/* margin   : 0 auto; */
+}
+
+/*********************************
+Button Positions
+**********************************/	
+.btn-secondary {
+	position: relative;
+	top: 40px;
+}
+
+.btn-info {
+	position: relative;
+	top: 20px;
+}
+
+#skipWifiButton {
+	position: relative;
+	top: 60px;
+}
+
+.moveLeft{
+	position: relative;
+	left: -16px;
+}
+
+.moveRight{
+	position:relative;
+	right: -14px;
 }
