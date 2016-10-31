@@ -563,7 +563,8 @@
 
 	});
 	
-	var changeNetwork = function (index, currentIndex, connected) {
+	//Changes the network by disabling the current network, followed by enabling the selected network, and refreshing the network list
+	var changeNetwork = function (index, currentIndex, deleteConnectedNetwork) {
 		sendUbusRequest('uci', 'set', {
 			config: 'wireless',
 			section: savedWifiNetworks[currentIndex][".name"],
@@ -582,10 +583,10 @@
 					sendUbusRequest('uci', 'commit', {
 							config: 'wireless'
 					}, function (response){
-						if(connected){
-							deleteNetwork(currentNetworkIndex);
+						if(deleteConnectedNetwork){
+							deleteNetwork(currentNetworkIndex); //If the currently connected network is to be deleted, delete it and continue
 						}else{
-							refreshNetworkList();
+							refreshNetworkList(); //Otherwise refresh the network list and continue
 						}
 						currentNetworkIndex = index;
 						sendUbusRequest('file', 'exec', {
@@ -598,6 +599,7 @@
 		});
 	}
 	
+	//Removes the network at "index"
 	var deleteNetwork = function(index) {
 		sendUbusRequest('uci', 'delete', {
 			config: 'wireless',
@@ -617,6 +619,7 @@
 		});
 	}
 	
+	//Refreshes the network list to show most recent network configurations (icons, etc)
 	var refreshNetworkList = function () {
 		savedWifiNetworks = [];
 		$('div').remove('#network-list');
@@ -644,15 +647,15 @@
 		$('#wifi-list').hide();
 		$('#wifiLoading').show();
 		var index = Number($('.glyphicons-ok').closest('div').prop('id'));
-		changeNetwork(index, currentNetworkIndex, false);
+		changeNetwork(index, currentNetworkIndex, false); //Enable the selected network and update the network list
 	});
 	
 	$('#networkTable').on('click', '.glyphicons-remove', function() {
 		$('#wifi-list').hide();
 		$('#wifiLoading').show();
 		var index = Number($('.glyphicons-remove').closest('div').prop('id'));
-		if(index === currentNetworkIndex && savedWifiNetworks[index+1]){
-			changeNetwork(index+1, currentNetworkIndex, true);
+		if(index === currentNetworkIndex && savedWifiNetworks[index+1]){ //In the case that the deleted network is currently connected and another network is currently configured
+			changeNetwork(index+1, currentNetworkIndex, true); // Connect to the next network and flag the current network for deletion
 		} else {
 			deleteNetwork(index);
 		}
