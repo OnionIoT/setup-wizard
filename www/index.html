@@ -214,7 +214,7 @@
 								</thead>
 						  </table>
 						</div>
-						<div id="cloudRegMessage"></div>
+						<!-- <div id="cloudRegMessage"></div> -->
 						<div class="form-group row">
 			        		<!-- <button id="setupCloudButton" type="button" class="btn btn-success btn-block">Setup Cloud</button> -->
 							<!-- <button type="button" class="modal-open">Setup Cloud</button> -->
@@ -256,12 +256,12 @@
 		        	<!-- Step 4: Software Updates -->
 					<div>
 						<!-- <h3 class="m-b-md">Firmware Update</h3> -->
-						<div id="firmwareText"></div>
-						<div style="text-align:center;" class="checkbox">
+						<div id="firmwareText" class="alert alert-warning"></div>
+						<div style="text-align:center; margin-left:-50px;" class="checkbox">
 							<label>Install Console<input type="checkbox" name="console" id="consoleInstall" value="Console" style="margin-left:5px;" checked><br>
 							</label>
 						</div>
-						<div id="consoleText"></div>
+						<div id="consoleText" class="alert alert-warning"></div>
 						<div class="form-group row">
 							<button id="upgradeFirmwareButton" type="button" class="btn btn-info btn-block">Upgrade Firmware</button>
 						</div>
@@ -282,13 +282,13 @@
 							<progress id="download-progress" class="progress progress-striped progress-animated" value="0" max="0"></progress>
 						</div>
 		        		<div id="upgrade-required">
-							<progress id="time" class="progress progress-striped progress-animated" value="0" max="2400"></progress>
 							<div id="warning" class="alert alert-danger m-t-lg" role="alert">
-								<p class="text-center">The firmware upgrade has started! Please be patient while the Omega updates and finalizes configuration, this can take up to 3 minutes.</p>
-								<p class="text-center">Once completed, the Omega will reboot automatically.</p>
-								<p class="text-center"><strong>Do NOT unplug the Omega during this process.</strong></p>
-								<p class="text-center">Once the update is complete, your Omega will stop flashing.</p>
+								<p class="text-center"><strong>Do NOT unplug the Omega during the update.</strong></p>
 							</div>
+							<progress id="time" class="progress progress-striped progress-animated" value="0" max="2400"></progress>
+							<div class="alert alert-info m-t-lg">
+								<p class="text-center">The firmware upgrade has started! Please be patient while the Omega updates and finalizes configuration, this can take up to 4 minutes.</p>
+								<p class="text-center"><strong>Once completed, the Omega will stop flashing.</strong></p></div>
 			        		<div id="success" class="alert alert-success" role="alert">
 								<p class="text-center"><strong>You have successfully set up your Omega!</strong></p>
 								<p class="text-center">You can now safely exit the Setup Wizard and start using your Omega</p>

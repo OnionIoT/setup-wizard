@@ -203,7 +203,7 @@
 						if (result.result[0] === 0) {
 							console.log('Wireless set');
 							sendUbusRequest('file', 'exec', {
-							command: 'wifimanager',
+							command: 'wifi',
 							params: []
 						})
 						} else {
@@ -590,7 +590,7 @@
 						}
 						currentNetworkIndex = index;
 						sendUbusRequest('file', 'exec', {
-							command: 'wifimanager',
+							command: 'wifi',
 							params: []
 						});
 					});
@@ -611,7 +611,7 @@
 				}, function(response){
 					refreshNetworkList();
 					sendUbusRequest('file', 'exec', {
-						command: 'wifimanager',
+						command: 'wifi',
 						params: []
 					});
 				});
@@ -836,7 +836,7 @@
 			$('#consoleText').html('<p>The Onion Console is a web-based virtual desktop for the Omega that allows you to easily change settings and can be used as an IDE.</p>');
 		} else if(upgradeRequired === 'true'){
 			$('#upgradeFirmwareButton').html('Upgrade Firmware');
-			$('#firmwareText').html('<p>Update your Omega to the latest and greatest firmware to get all the latest software goodies from Onion.</p>');
+			$('#firmwareText').html('<p>Update your Omega to the latest and greatest firmware to get all the newest software goodies from Onion.</p>');
 			// $('#consoleText').html('');
 		} else {
 			$('#upgradeFirmwareButton').html('Finish Setup Wizard');
@@ -906,7 +906,7 @@
 			$('#time').prop('value', time.toString());
 
 			if (time >= 2400) {
-				$('#loading').hide();
+				$('#time').hide();
 				$('#warning').hide();
 				$('#success').show();
 				clearInterval(timerBar);
@@ -1139,12 +1139,11 @@
 					if(response.result.length == 2){
 						//If the secret is not anonymous then display the device ID and write change the registerDeviceButton text
 						if(response.result[1].values.secret !== "anonymous"){
-							$('#cloudText').html('<p>Your device is registered with the onion cloud. Check out <a href="http://cloud.onion.io/" target="_blank">cloud.onion.io</a> to get started!</p>');
+							$('#cloudText').html('<div class="alert alert-info"><p>Your device is registered with the Onion Cloud. Check out <a href="http://cloud.onion.io/" target="_blank">cloud.onion.io</a> to get started!</p></div>');
 							$('#deviceId-list').css('display','block');
 							$('#deviceId').html(response.result[1].values.deviceId);
 							
-							$('#cloudRegMessage').html('You can register your device again on the cloud.');
-							$('#registerDeviceButton').html('Register device again as a new device');
+							$('#registerDeviceButton').html('Register device again as a new device (not recommended)');
 						}
 						else {
 							$('#deviceId-list').css('display','none');
@@ -1184,6 +1183,7 @@
 					$('#install-console-only').hide();
 					$('#upgrade-required').hide();
 					$('#downloading').show();
+					$('#completeBackButton').hide();
 					$('#download-progress').prop('value', 0);
 					
 					sendUbusRequest('uci', 'set', {
@@ -1222,6 +1222,7 @@
 					$('#install-console-only').hide();
 					$('#upgrade-required').hide();
 					$('#downloading').show();
+					$('#completeBackButton').hide();
 					$('#download-progress').prop('value', 0);
 					console.log("Upgrading");
 					sendUbusRequest('onion', 'oupgrade', {
@@ -1260,11 +1261,13 @@
 						$('#upgrade-not-required').hide();
 						$('#downloading').hide();
 						$('#install-console-only').show();
+						$('#completeBackButton').show();
 					} else {
 						$('#upgrade-required').hide();
 						$('#install-console-only').hide();
 						$('#downloading').hide();
 						$('#upgrade-not-required').show();
+						$('#completeBackButton').show();
 					}
 				}
 			}

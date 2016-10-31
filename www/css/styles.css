@@ -269,8 +269,9 @@ Wifi
 			position: relative;
 			top: -20px;
 			float: right;
-			margin-right: 5px;
+			margin-right: 10px;
 			color: #000000;
+			z-index: 100;
 		}
 .glyphicons-ok:hover {
 			color: #ffbf00;
@@ -280,8 +281,9 @@ Wifi
 			position: relative;
 			top: -20px;
 			float: right;
-			margin-right: 10px;
+			margin-right: 5px;
 			color: #000000;
+			z-index: 100;
 		}
 		
 .glyphicons-remove:hover {
