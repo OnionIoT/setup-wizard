@@ -413,7 +413,13 @@
 	$('#wifi-form').submit(function (e) {
 		e.preventDefault();
 		$('#wifi-message > .alert').alert('close');
-			
+		
+		var clearFields = function () {
+			$('#wifi-ssid').val('');
+			$('#wifi-key').val('');
+			$('#wifi-encryption').val('');
+		};
+		
 		var postCheck = function () {
 			// clearInterval(animationInterval);
 			$('#wifi-config-button').html('Configure Wi-Fi');
@@ -477,10 +483,9 @@
 							fileSize = data.result[1].image.size;
 							$('#download-progress').prop('max', data.result[1].image.size);
 							postCheck();
-							$('.modal').modal('hide');
+							clearFields();
 							gotoStep(nextStep);
 						});
-					// });
 					}
 				});
 			}, 10000);
@@ -504,7 +509,13 @@
 	$('#wifi-form-modal').submit(function (e) {
 		e.preventDefault();
 		$('#wifi-message > .alert').alert('close');
-			
+		
+		var clearFields = function () {
+			$('#wifi-ssid-modal').val('');
+			$('#wifi-key-modal').val('');
+			$('#wifi-encryption-modal').val('');
+		};
+		
 		var postCheck = function () {
 			// clearInterval(animationInterval);
 			$('#wifi-config-button-modal').html('Configure Wi-Fi');
@@ -569,6 +580,7 @@
 							fileSize = data.result[1].image.size;
 							$('#download-progress').prop('max', data.result[1].image.size);
 							postCheck();
+							clearFields();
 							$('.modal').modal('hide');
 							gotoStep(nextStep);
 						});
@@ -703,9 +715,19 @@
 				if(value.disabled !== '1'){
 					currentNetworkIndex = Number(value['.index']);
 					$('#network-list').append(" <div class='list-group-item layout horizontal end'><span id='connectedNetwork'class='glyphicons glyphicons-wifi'></span><span>"+ value.ssid +"</span><div id='" + value['.index'] + "'><a class='glyphicons glyphicons-remove' href='#' data-toggle='tooltip' title='Delete Network'></a></div></div>");
+					if (($('#network-list > div').length) <= 1) {
+						$('.glyphicons-remove').hide();
+					} else {
+						$('.glyphicons-remove').show();
+					}
 					return;
 				}
 				$('#network-list').append(" <div class='list-group-item layout horizontal end'><span class='glyphicons glyphicons-wifi'></span><span>"+ value.ssid +"</span><div id='" + value['.index'] + "'><a class='glyphicons glyphicons-remove' href='#' data-toggle='tooltip' title='Delete Network'></a><a class='glyphicons glyphicons-ok' href='#' data-toggle='tooltip' title='Enable Network'></a></div></div> ");
+				if (($('#network-list > div').length) <= 1) {
+					$('.glyphicons-remove').hide();
+				} else {
+					$('.glyphicons-remove').show();
+				}
 			});
 		});
 		$('#wifi-list').show();
