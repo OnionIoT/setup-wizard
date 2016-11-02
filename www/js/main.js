@@ -541,7 +541,7 @@
 		// }, 1000);
 		
 		
-		//Checks if the ssid is black and if the password entered is valid for each encryption type
+		//Checks if the ssid is blank and if the password entered is valid for each encryption type
 		if ($('#wifi-ssid-modal').val() === ''){
 			if (checkOnlineRequest) {
 					checkOnlineRequest.abort();
