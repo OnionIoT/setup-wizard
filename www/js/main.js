@@ -113,7 +113,8 @@
 	var availableWifiNetworks,
 		fileSize = '0',
 		omegaOnline = false;
-
+		
+	//Used to display error messages in an alert box
 	var showWifiMessage = function (type, message) {
 		$('#wifi-message').append($('<div class="alert alert-' + type + ' alert-dismissible fade in" role="alert"> \
 			<button type="button" class="close" data-dismiss="alert" aria-label="Close"> \
@@ -123,6 +124,8 @@
 			' + message + ' \
 		</div>'));
 	};
+
+	//Used to display error messages in an alert box
 	var showWifiMessageModal = function (type, message) {
 		$('#wifi-message-modal').append($('<div class="alert alert-' + type + ' alert-dismissible fade in" role="alert"> \
 			<button type="button" class="close" data-dismiss="alert" aria-label="Close"> \
@@ -133,29 +136,49 @@
 		</div>'));
 	};
 	
-	var addWirelessNetwork = function () {
-			sendUbusRequest('uci', 'add', {
-				config: 'wireless',
-				type: 'wifi-iface'
-			}, function (result) {
-				console.log('uci add wireless result:', result);
-				if (result.result[0] === 0) {
-					sendUbusRequest('uci', 'commit', {
-							config: 'wireless'
-					}, function (result) {
-						if (result.result[0] === 0) {
-							console.log('connected');
-						} else {
-							console.log('Unable to add wireless network.');
-						}
-					});
-				} else {
-					console.log('Unable to add wireless network.');
-				}
-			});
+	//Adds an empty network config to the wireless config file
+	var addWirelessNetwork = function (params) {
+		sendUbusRequest('uci', 'add', {
+			config: 'wireless',
+			type: 'wifi-iface',
+			values: params
+		}, function (result) {
+			console.log('uci add wireless result:', result);
+			if (result.result[0] === 0) {
+				sendUbusRequest('uci', 'commit', {
+						config: 'wireless'
+				}, function (result) {
+					if (result.result[0] === 0) {
+						savedWifiNetworks = [];
+						sendUbusRequest('uci','get',{config:"wireless"},function(response){
+							$.each( response.result[1].values, function( key, value ) {
+								savedWifiNetworks.push(value);
+							});
+							$.each(savedWifiNetworks, function(key, value) {
+								if(value.mode !== "sta")
+									return;
+								if(value.disabled !== '1'){
+									currentNetworkIndex = Number(value['.index']);
+									return;
+								}
+							});
+							console.log('added wireless network');
+						});
+					} else {
+						console.log('Unable to add wireless network.');
+					}
+					if(params.disabled === "0"){
+						changeNetwork((savedWifiNetworks.length-1), currentNetworkIndex, false, false);
+					}
+				});
+			} else {
+				console.log('Unable to add wireless network.');
+			}
+		});
 	};
 	
-	var genUciNetworkParams = function (ssid, auth, password, bApNetwork, bEnabled) {
+	//Generates the parameters for the uci set wireless ubus call
+	var genUciNetworkParams = function (ssid, password, auth, bApNetwork, bEnabled) {
 		var params = {};
 		// set the basic info
 		params.device 		= 'radio0'
@@ -189,42 +212,51 @@
 		return params;
 	};
 	
-	var setWirelessNetwork = function (sectionName, params) {
-			sendUbusRequest('uci', 'set', {
-				config: 'wireless',
-				section: sectionName,
-				values: params
-			}, function (result) {
-				console.log('uci set wireless result:', result);
-				if (result.result[0] === 0) {
-					sendUbusRequest('uci', 'commit', {
-							config: 'wireless'
-					}, function (result) {
-						if (result.result[0] === 0) {
-							console.log('Wireless set');
-							sendUbusRequest('file', 'exec', {
-							command: 'wifi',
-							params: []
-						})
-						} else {
-							console.log('Unable to edit wireless network settings.');
-						}
-					});
-				} else {
-					console.log('Unable to edit wireless network settings.');
-				}
-			});
-	};
+	//Uses ubus to uci set the wireless with the genUciNetworkParams and enables the configuration
+	// var setWirelessNetwork = function (sectionName, params) {
+			// sendUbusRequest('uci', 'set', {
+				// config: 'wireless',
+				// section: savedWifiNetworks[currentNetworkIndex][".name"],
+				// values: {
+					// disabled = "1"
+				// }
+			// }, function(){
+				// sendUbusRequest('uci', 'set', {
+					// config: 'wireless',
+					// section: sectionName,
+					// values: params
+				// }, function (result) {
+					// console.log('uci set wireless result:', result);
+					// if (result.result[0] === 0) {
+						// sendUbusRequest('uci', 'commit', {
+								// config: 'wireless'
+						// }, function (result) {
+							// if (result.result[0] === 0) {
+								// console.log('Wireless set');
+								// sendUbusRequest('file', 'exec', {
+								// command: 'wifimanager',
+								// params: []
+							// })
+							// } else {
+								// console.log('Unable to edit wireless network settings.');
+							// }
+						// });
+					// } else {
+						// console.log('Unable to edit wireless network settings.');
+					// }
+				// });
+			// });
+	// };
 
-
+	//Function to generate params and set wireless config
 	var setupWifiNetwork = function (ssid, password, auth, uciId) {
 		if (uciId == null) {
 			var uciId 			= -1;
 		}
 		var wifiSectionName = '@wifi-iface[' + uciId + ']'
 		// setup the wifi-iface
-		var params 			= genUciNetworkParams(ssid, auth, password, false, false);
-		var wirelessPromise	= setWirelessNetwork(wifiSectionName, params);
+		var params 			= genUciNetworkParams(ssid, password, auth, false, true);
+		var wirelessPromise	= addWirelessNetwork(params);
 	};
 	
 	// Check to see if the Omega is online!!
@@ -251,6 +283,7 @@
 			
 	};
 
+	//Displays the list of networks in the dropdown after a scan
 	var showScanMessage = function (message) {
 		$('#wifi-select').empty();
 		$('#wifi-select').append($('<option value="" disabled selected>' + message + '</option>'));
@@ -261,6 +294,7 @@
 		$('#wifi-select-modal').append($('<option value="" disabled selected>' + message + '</option>'));
 	};
 
+	//Scans for available wlan0 networks using wifi-scan
 	var scanWifiNetwork = function () {
 		showScanMessage('Scanning...');
 		$('#wifi-scan-btn').prop('disabled', true);
@@ -295,6 +329,7 @@
 		});
 	};
 	
+	//Scans for available wlan0 networks using wifi-scan. TODO: Clean up into one function that takes in parameter (id)
 	var scanWifiNetworkModal = function () {
 		showScanMessageModal('Scanning...');
 		$('#wifi-scan-btn-modal').prop('disabled', true);
@@ -329,9 +364,11 @@
 		});
 	};
 
+	//On click functions for the scan button
 	$('#wifi-scan-btn').click(scanWifiNetwork);
 	$('#wifi-scan-btn-modal').click(scanWifiNetworkModal);
 
+	//Reads the information of the selected network from the dropdown and displays it in fields for the user
 	$('#wifi-select').change(function () {
 		var index = $('#wifi-select').val();
 		var network = availableWifiNetworks[index];
@@ -349,6 +386,8 @@
 			$('#wifi-encryption').val('wep');
 		}
 	});
+	
+	//Reads the information of the selected network from the dropdown and displays it in fields for the user. TODO: Cleanup into one function that takes ID as param modal
 	$('#wifi-select-modal').change(function () {
 		var index = $('#wifi-select-modal').val();
 		var network = availableWifiNetworks[index];
@@ -368,6 +407,9 @@
 	});
 
 
+	//WiFi form submission function disables buttons to avoid conflicts
+	//Then adds the network and enables it
+	//Then tests the connection and updates the upgradeRequired variable and others
 	$('#wifi-form').submit(function (e) {
 		e.preventDefault();
 		$('#wifi-message > .alert').alert('close');
@@ -376,12 +418,12 @@
 			// clearInterval(animationInterval);
 			$('#wifi-config-button').html('Configure Wi-Fi');
 			$('#wifi-config-button').prop('disabled', false);
-			$('#skipStepTestButton').prop('disabled', false);
+			// $('#skipStepTestButton').prop('disabled', false);
 			$('#wifi-loading').css('display','none');
 		};
 
 		$('#wifi-config-button').prop('disabled', true);
-		$('#skipStepTestButton').prop('disabled', true);
+		// $('#skipStepTestButton').prop('disabled', true);
 		$('#wifi-config-button').html('Configuring<div id="wifi-loading" class="wifiLoad" style="display: block;">');
 
 		// var animationInterval = setInterval(function () {
@@ -455,9 +497,7 @@
 			
 			
 			//Connect to the network
-			addWirelessNetwork();
 			setupWifiNetwork($('#wifi-ssid').val(), $('#wifi-key').val(), $('#wifi-encryption').val());
-
 		}
 	});
 	
@@ -469,12 +509,12 @@
 			// clearInterval(animationInterval);
 			$('#wifi-config-button-modal').html('Configure Wi-Fi');
 			$('#wifi-config-button-modal').prop('disabled', false);
-			$('#skipStepTestButton').prop('disabled', false);
+			// $('#skipStepTestButton').prop('disabled', false);
 			$('#wifi-loading').css('display','none');
 		};
 
 		$('#wifi-config-button-modal').prop('disabled', true);
-		$('#skipStepTestButton').prop('disabled', true);
+		// $('#skipStepTestButton').prop('disabled', true);
 		$('#wifi-config-button-modal').html('Connecting<div id="wifi-loading" class="wifiLoad" style="display: block;">');
 		//$('#wifi-loading').css('display','block');
 
@@ -483,7 +523,7 @@
 			// $('#wifi-config-button').html(label.length < 14 ? label + '.' : 'Configuring');
 		// }, 1000);
 		
-		
+		//Checks if the password entered is valid for each encryption type
 		if ($('#wifi-encryption-modal').val() === 'psk2' || $('#wifi-encryption-modal').val() === 'psk'){
 			if($('#wifi-key-modal').val().length < 8 || $('#wifi-key-modal').val().length > 63){
 				if (checkOnlineRequest) {
@@ -549,9 +589,9 @@
 			
 			
 			//Connect to the network
-			addWirelessNetwork();
-			setupWifiNetwork($('#wifi-ssid-modal').val(), $('#wifi-key-modal').val(), $('#wifi-encryption-modal').val());
-
+			var params = genUciNetworkParams($('#wifi-ssid-modal').val(), $('#wifi-key-modal').val(), $('#wifi-encryption-modal').val(), false, false);
+			addWirelessNetwork(params);
+			refreshNetworkList();
 		}
 	});
 	
@@ -563,16 +603,24 @@
 
 	});
 	
+	// $('#skipStepTestButton').click(function(){
+			// console.log("skipWifiButton gets called");
+			// console.log("nextStep in skip TestButton is nextStep",nextStep);
+			// console.log(preStep);
+			// gotoStep(nextStep);
+
+	// });
+	
 	//Changes the network by disabling the current network, followed by enabling the selected network, and refreshing the network list
-	var changeNetwork = function (index, currentIndex, deleteConnectedNetwork) {
-		sendUbusRequest('uci', 'set', {
-			config: 'wireless',
-			section: savedWifiNetworks[currentIndex][".name"],
-			values: {
-				disabled: '1'
-			}
-		}, function(response){
-			if(response.result[0] === 0){
+	var changeNetwork = function (index, currentIndex, deleteConnectedNetwork, refresh) {
+		if(savedWifiNetworks[currentIndex].mode === "sta"){
+			sendUbusRequest('uci', 'set', {
+				config: 'wireless',
+				section: savedWifiNetworks[currentIndex][".name"],
+				values: {
+					disabled: '1'
+				}
+			}, function(response){
 				sendUbusRequest('uci', 'set', {
 					config: 'wireless',
 					section: savedWifiNetworks[index][".name"],
@@ -585,7 +633,8 @@
 					}, function (response){
 						if(deleteConnectedNetwork){
 							deleteNetwork(currentNetworkIndex); //If the currently connected network is to be deleted, delete it and continue
-						}else{
+						}
+						if(refresh){
 							refreshNetworkList(); //Otherwise refresh the network list and continue
 						}
 						currentNetworkIndex = index;
@@ -595,8 +644,32 @@
 						});
 					});
 				});
-			}
-		});
+			});
+		} else {
+			sendUbusRequest('uci', 'set', {
+				config: 'wireless',
+				section: savedWifiNetworks[index][".name"],
+				values: {
+					disabled: '0'
+				}
+			}, function(response){
+				sendUbusRequest('uci', 'commit', {
+						config: 'wireless'
+				}, function (response){
+					if(deleteConnectedNetwork){
+						deleteNetwork(currentNetworkIndex); //If the currently connected network is to be deleted, delete it and continue
+					}
+					if(refresh){
+						refreshNetworkList(); //Otherwise refresh the network list and continue
+					}
+					currentNetworkIndex = index;
+					sendUbusRequest('file', 'exec', {
+						command: 'wifi',
+						params: []
+					});
+				});
+			});
+		}
 	}
 	
 	//Removes the network at "index"
@@ -610,10 +683,6 @@
 						config: 'wireless'
 				}, function(response){
 					refreshNetworkList();
-					sendUbusRequest('file', 'exec', {
-						command: 'wifi',
-						params: []
-					});
 				});
 			}
 		});
@@ -643,19 +712,22 @@
 		$('#wifiLoading').hide();
 	}
 	
+	//On click function for the enable network icon (checkmark)
 	$('#networkTable').on('click', '.glyphicons-ok', function() {
 		$('#wifi-list').hide();
 		$('#wifiLoading').show();
-		var index = Number($('.glyphicons-ok').closest('div').prop('id'));
-		changeNetwork(index, currentNetworkIndex, false); //Enable the selected network and update the network list
+		var index = Number($(this).closest('div').prop('id'));
+		changeNetwork(index, currentNetworkIndex, false, true); //Enable the selected network and update the network list
 	});
 	
+	
+	//On click function for the remove network icon (X)
 	$('#networkTable').on('click', '.glyphicons-remove', function() {
 		$('#wifi-list').hide();
 		$('#wifiLoading').show();
-		var index = Number($('.glyphicons-remove').closest('div').prop('id'));
+		var index = Number($(this).closest('div').prop('id'));
 		if(index === currentNetworkIndex && savedWifiNetworks[index+1]){ //In the case that the deleted network is currently connected and another network is currently configured
-			changeNetwork(index+1, currentNetworkIndex, true); // Connect to the next network and flag the current network for deletion
+			changeNetwork(index+1, currentNetworkIndex, true, true); // Connect to the next network and flag the current network for deletion
 		} else {
 			deleteNetwork(index);
 		}
@@ -1012,7 +1084,7 @@
 						if(response.result[1].value == "1"){
 							console.log("Skip Buttons should be visible");
 							//If value is 1, the setup has been run before and all skip/back buttons except cloud reg are enabled.
-							$('#skipStepTestButton').css('display','block');
+							// $('#skipStepTestButton').css('display','block');
 							$('#skipWifiButton').css('display','block');
 							// $('#skipFirmwareStep').css('display','block');
 							// $('#skipCloudReg').css('display','block');
@@ -1024,7 +1096,7 @@
 						}else{
 							console.log("Skip Buttons are hidden");
 							//If value is 0, the setup has NOT been run before and all skip buttons are disabled except for cloudSetup one. 
-							$('#skipStepTestButton').css('display','none');
+							// $('#skipStepTestButton').css('display','none');
 							$('#skipWifiButton').css('display','none');
 							// $('#skipFirmwareStep').css('display','none');
 							// $('#skipCloudReg').css('display','none');
@@ -1037,7 +1109,7 @@
 					} else{
 						console.log("Got a wack response from the ubus request, hid all skip buttons");
 						//If there is an error, assume it is a first time setup
-						$('#skipStepTestButton').css('display','none');
+						// $('#skipStepTestButton').css('display','none');
 						$('#skipWifiButton').css('display','none');
 						// $('#skipFirmwareStep').css('display','none');
 						// $('#skipCloudReg').css('display','none');
