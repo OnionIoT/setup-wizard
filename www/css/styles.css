@@ -290,6 +290,12 @@ Wifi
 			color: #ffbf00;
 		}
 		
+#wifi-loading {
+	position: relative;
+	right: -60px;
+	top: -20px;
+}
+		
 /*********************************
 Cloud
 **********************************/		
