@@ -1134,7 +1134,6 @@
 							console.log("Skip Buttons are hidden");
 							//If value is 0, the setup has NOT been run before and all skip buttons are disabled except for cloudSetup one. 
 							// $('#skipStepTestButton').css('display','none');
-							$('#skipWifiButton').css('display','none');
 							// $('#skipFirmwareStep').css('display','none');
 							// $('#skipCloudReg').css('display','none');
 							console.log("About to hide the setupCloudBackButton");
@@ -1147,7 +1146,6 @@
 						console.log("Got a wack response from the ubus request, hid all skip buttons");
 						//If there is an error, assume it is a first time setup
 						// $('#skipStepTestButton').css('display','none');
-						$('#skipWifiButton').css('display','none');
 						// $('#skipFirmwareStep').css('display','none');
 						// $('#skipCloudReg').css('display','none');
 						console.log("About to hide the setupCloudBackButton");
