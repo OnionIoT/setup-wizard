@@ -24,7 +24,8 @@ button:focus {
 }
 
 .stepClass{
-    width: 640px;
+    min-width: 640px;
+/*    height: auto;*/
 }
 
 .shiftLeftIn{
@@ -62,23 +63,23 @@ button:focus {
     -webkit-animation-timing-function: ease;
 }
 @keyframes slideLeftIn{
-    from{left: 700px;}
+    from{left: 7000px;}
     to{left: 0px;}
 }
 
 @keyframes slideLeftOut{
     from{left: 0px;}
-    to{left: -700px;}
+    to{left: -7000px;}
 }
 
 @keyframes slideRightIn{
-    from{left: -700px;}
+    from{left: -7000px;}
     to{left: 0px;}
 }
 
 @keyframes slideRightOut{
     from{left: 0px;}
-    to{left: 700px;}
+    to{left: 7000px;}
 }
 /*********************************
 Branding
@@ -220,7 +221,7 @@ Steps
 **********************************/
 
 #steps {
-	padding: 0 2rem;
+/*	padding: 0 2rem;*/
     display: flex;
 }
 

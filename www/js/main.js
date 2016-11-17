@@ -1476,9 +1476,10 @@
 					// },100);	
 					$(controls[step - 1]).show().removeClass('shiftLeftIn').removeClass('shiftLeftOut').removeClass('shiftRightOut').removeClass('shiftRightIn').addClass('shiftLeftOut');
 					setTimeout(function(){
-						$(controls[step - 1]).hide().removeClass('shiftLeftOut');
+						$(controls[step - 1]).hide();
+						$(controls[step]).show().removeClass('shiftLeftIn').removeClass('shiftLeftOut').removeClass('shiftRightOut').removeClass('shiftRightIn').addClass('shiftLeftIn').css('height','auto');
 					},1000);
-					$(controls[step]).show().removeClass('shiftLeftIn').removeClass('shiftLeftOut').removeClass('shiftRightOut').removeClass('shiftRightIn').addClass('shiftLeftIn');
+					// $(controls[step]).show().removeClass('shiftLeftIn').removeClass('shiftLeftOut').removeClass('shiftRightOut').removeClass('shiftRightIn').addClass('shiftLeftIn').css('height','auto');
 					// $(controls[step]).removeClass('shiftLeftOut');
 					// $(controls[step]).addClass('shiftLeftIn');
 
@@ -1496,8 +1497,10 @@
 					$(controls[step + 1]).show().removeClass('shiftLeftIn').removeClass('shiftLeftOut').removeClass('shiftRightOut').removeClass('shiftRightIn').addClass('shiftRightOut');
 					setTimeout(function(){
 						$(controls[step + 1]).hide();
+						$(controls[step]).show().removeClass('shiftLeftIn').removeClass('shiftLeftOut').removeClass('shiftRightOut').removeClass('shiftRightIn').addClass('shiftRightIn').css('height','auto');
+
 					},1000);
-					$(controls[step]).show().removeClass('shiftLeftIn').removeClass('shiftLeftOut').removeClass('shiftRightOut').removeClass('shiftRightIn').addClass('shiftRightIn');
+					// $(controls[step]).show().removeClass('shiftLeftIn').removeClass('shiftLeftOut').removeClass('shiftRightOut').removeClass('shiftRightIn').addClass('shiftRightIn').css('height','auto');
 					// $(controls[step]).removeClass('shiftRightOut');
 					// $(controls[step]).addClass('shiftRightIn');					
 				}
