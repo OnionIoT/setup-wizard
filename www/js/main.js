@@ -1381,7 +1381,11 @@
 		}
 	];
 
+
 	var gotoStep = function (step) {
+		if(preStep != step){
+			var bSlideLeft = true;
+		}
 		if (currentStep !== step || ( (currentStep==0) && (step ==0))) {
 			currentStep = step;
 			preStep = currentStep - 1;
@@ -1399,8 +1403,16 @@
 			}
 
 			steps[step].init();
-			$(controls).hide();
-			$(controls[step]).show();
+			console.log("The value of bSlideLeft is:",bSlideLeft);
+			if(bSlideLeft){
+				$(controls).animate({left:'-2000px'}).hide().animate({left:'0px'});
+				$(controls[step]).animate({left:'2000px'}).show().animate({left:'0px'});
+			} else{
+				$(controls).animate({left:'2000px'}).hide().animate({left:'0px'});
+				$(controls[step]).animate({left:'-2000px'}).show().animate({left:'0px'});				
+			}
+			// $(controls).hide();
+			// $(controls[step]).show();
 		}
 	};
 

@@ -23,6 +23,11 @@ button:focus {
 	margin-bottom: 0;
 }
 
+@keyframes slideLeftIn{
+    from{ transform: translateX(0px)}
+    to{ transform: translateX(300px)}
+}
+
 /*********************************
 Branding
 **********************************/
@@ -31,7 +36,7 @@ Branding
     height: 64px;
     width: 64px;
     border-radius: 25%;
-    background-color: #81476d;
+    background-color: #9B4B63 ;
     font-family: 'onion';
     display: block;
     position: relative;
@@ -150,11 +155,11 @@ Progress Indicator
 }
 
 #steps-indicator > li.completed {
-    color: #81476d;
+    color: #9B4B63 ;
 }
 	#steps-indicator > li.completed:before,
 	#steps-indicator > li.completed:after {
-	    background-color: #81476d;
+	    background-color: #9B4B63 ;
 	}
 
 
@@ -189,7 +194,7 @@ Loading
     border-left: 7px solid #eee;
     border-right: 7px solid #eee;
     border-bottom: 7px solid #eee;
-    border-top: 7px solid #81476d;
+    border-top: 7px solid #9B4B63 ;
     border-radius: 100%
 }
 .wifiLoad {

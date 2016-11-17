@@ -14,8 +14,14 @@
 	<body>
 		<section class="wrapper">
 			<div class="card card-block main">
-				<div class="onion-logo"></div>
-				<h2 class="m-t-md m-b-lg text-center">Onion Omega Setup Wizard</h2>
+				<div class="logoContainer">
+					<div class="span4"></div>
+					<div class="span4">
+						<img class="center-block" src="./icons/Onion_Logo.png" style="height:70px">
+					</div>
+					<div class="span4"></div>
+				</div>
+				<h2 class="m-t-md m-b-lg text-center"></h2>
 				<ul id="steps-indicator"  class="m-b-lg">
 		            <li>Login</li>
 		            <li>WiFi</li>
@@ -23,10 +29,11 @@
 		            <li>Software</li>
 		            <li>Done!</li>
 		        </ul>
-
+		    </div>
+		    <div>
 		        <div id="steps">
 		        	<!-- Step 1: Login to Omega -->
-		        	<div>
+		        	<div class="card card-block main" style="margin-top:40px;">
 		        		<div class="row">
 		        			<div class="col-lg-8 col-md-8 col-sm-8 col-xs-8 col-lg-offset-2 col-md-offset-2 col-sm-offset-2 col-xs-offset-2">
 				        		<form id="login-form">
@@ -48,7 +55,7 @@
 		        	</div>
 
 		        	<!-- Step 2: Setup WiFi -->
-		        	<div>
+		        	<div class="card card-block main" style="margin-top:40px;">
 						<div id="wifiLoading" class="loading"></div>
 						<div id="wifi-connect">
 							<form id="wifi-form">
@@ -119,7 +126,7 @@
 								</div>
 							<div class="row">
 									<div class="col-sm-6">
-										<button id="wifiBackButton" type="button" class ="btn btn-secondary btn-block moveLeft" style="display:none;">< Back</button>
+										<button id="wifiBackButton" type="button" class ="btn btn-secondary btn-block moveLeft" style="display:none;"> Back</button>
 									</div>
 									<div class="col-sm-6">
 										<button id="skipWifiButton" type="button" class="btn btn-secondary btn-block moveRight">Skip Step ></button>
@@ -200,7 +207,7 @@
 
 		        	<!-- Step 3: Setup the cloud here -->
 
-		        	<div>
+		        	<div class="card card-block main" style="margin-top:40px;">
 		        		<div id="cloudLoading" class="loading"></div>
 		        		<div id="cloudText"><p>Register your Omega on the Onion Cloud.</p>
 						<p>Using the Onion Cloud, you can remotely manage and control your device, use the Cloud Compile service, and use apps to interact with your device.</p></div>
@@ -244,7 +251,7 @@
 			        	</div>
 		        		<div class='row'>
 			        		<div class="col-sm-6">
-			        			<button id="setupCloudBackButton" type="button" class ="btn btn-secondary btn-block moveLeft">< Back</button>
+			        			<button id="setupCloudBackButton" type="button" class ="btn btn-secondary btn-block moveLeft">Back</button>
 			        		</div>
 		        			<div class="col-sm-6">
 			        			<button id="skipCloudReg" type="button" class="btn btn-secondary btn-block moveRight">Skip Step ></button>
@@ -254,7 +261,7 @@
 
 
 		        	<!-- Step 4: Software Updates -->
-					<div>
+					<div class="card card-block main" style="margin-top:40px;">
 						<!-- <h3 class="m-b-md">Firmware Update</h3> -->
 						<div id="firmwareText" class="alert alert-warning"></div>
 						<div style="text-align:center; margin-left:-50px;" class="checkbox">
@@ -267,7 +274,7 @@
 						</div>
 						<div id="firwareButtonContainer" class="row">
 							<div class="col-sm-6">
-								<button id="firmwareBackButton" type="button" class = "btn btn-secondary btn-block moveLeft">< Back</button>
+								<button id="firmwareBackButton" type="button" class = "btn btn-secondary btn-block moveLeft">Back</button>
 							</div>
 							<!-- <div class="col-sm-6"> -->
 								<!-- <button id="skipFirmwareStep" type="button" class="btn btn-success btn-block">Skip Step</button> -->
@@ -276,7 +283,7 @@
 					</div>
 					
 		        	<!-- Step 5: Finished! -->
-		        	<div>
+		        	<div class="card card-block main" style="margin-top:40px;">
 						<div id="downloading">
 							<h4 class="m-b-md">The Omega is downloading the latest firmware, sit tight!</h4>
 							<progress id="download-progress" class="progress progress-striped progress-animated" value="0" max="0"></progress>
@@ -308,7 +315,7 @@
 						</div>
 						<div class="row">
 							<div class="col-sm-6">
-								<button id="completeBackButton" type="button" class="btn btn-secondary btn-block moveLeft">< Back</button>
+								<button id="completeBackButton" type="button" class="btn btn-secondary btn-block moveLeft">Back</button>
 							</div>
 						</div>
 		        	</div>
