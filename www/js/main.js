@@ -1037,6 +1037,14 @@
 
 	var steps = [
 		{
+			ready: function(){
+				return false;
+			},
+			init: function(){
+				return;
+			}
+		},
+		{
 			ready: function () {
 				return true;
 			},
@@ -1396,7 +1404,7 @@
 				controls = $('#steps').children();
 
 			for (var i = 0; i < indicators.length; i++) {
-				if (i <= step) {
+				if (i <= (step - 1)) {
 					$(indicators[i]).addClass('completed');
 				} else {
 					$(indicators[i]).removeClass('completed');
