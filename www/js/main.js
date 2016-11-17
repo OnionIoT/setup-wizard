@@ -72,7 +72,7 @@
 
 	$('#login-form').submit(function (e) {
 		e.preventDefault();
-
+		$('#loginButton').prop('disabled', true);
 		sendUbusRequest('session', 'login', {
 			username: $('#login-username').val(),
 			password: $('#login-password').val()
@@ -90,6 +90,7 @@
 
 					gotoStep(nextStep);
 				} else {
+					$('#loginButton').prop('disabled', false);
 					showLoginMessage('Login failed.');
 				}
 			}
