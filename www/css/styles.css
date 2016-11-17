@@ -23,11 +23,63 @@ button:focus {
 	margin-bottom: 0;
 }
 
-@keyframes slideLeftIn{
-    from{ transform: translateX(0px)}
-    to{ transform: translateX(300px)}
+.stepClass{
+    width: 640px;
 }
 
+.shiftLeftIn{
+    -webkit-animation: slideLeftIn 1s;
+    -moz-animation: slideLeftIn 1s;
+    -o-animation: slideLeftIn 1s;
+    animation: slideLeftIn 1s;
+    animation-fill-mode: forwards;
+    -webkit-animation-timing-function: ease;
+}
+
+.shiftLeftOut{
+    -webkit-animation: slideLeftOut 1s;
+    -moz-animation: slideLeftOut 1s;
+    -o-animation: slideLeftOut 1s;
+    animation: slideLeftOut 1s;
+    animation-fill-mode: forwards;
+    -webkit-animation-timing-function: ease;
+}
+.shiftRightIn{
+    -webkit-animation: slideRightIn 1s;
+    -moz-animation: slideRightIn 1s;
+    -o-animation: slideRightIn 1s;
+    animation: slideRightIn 1s;
+    animation-fill-mode: forwards;
+    -webkit-animation-timing-function: ease;
+}
+
+.shiftRightOut{
+    -webkit-animation: slideRightOut 1s;
+    -moz-animation: slideRightOut 1s;
+    -o-animation: slideRightOut 1s;
+    animation: slideRightOut 1s;
+    animation-fill-mode: forwards;
+    -webkit-animation-timing-function: ease;
+}
+@keyframes slideLeftIn{
+    from{left: 700px;}
+    to{left: 0px;}
+}
+
+@keyframes slideLeftOut{
+    from{left: 0px;}
+    to{left: -700px;}
+}
+
+@keyframes slideRightIn{
+    from{left: -700px;}
+    to{left: 0px;}
+}
+
+@keyframes slideRightOut{
+    from{left: 0px;}
+    to{left: 700px;}
+}
 /*********************************
 Branding
 **********************************/
@@ -169,6 +221,7 @@ Steps
 
 #steps {
 	padding: 0 2rem;
+    display: flex;
 }
 
 #steps > div {

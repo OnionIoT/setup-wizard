@@ -1465,13 +1465,41 @@
 			} else{
 				if(bSlideLeft){
 					console.log("Should be going forward");
-					$(controls[step - 1]).animate({left:'-2000px'}).hide("slow",function(){
-						$(controls[step]).hide().animate({left:'2000px'}).show().animate({left:'0px'});		
-					});
+					// $(controls[step]).hide();
+					// $(controls[step]).css('left','700px').show();
+					// setTimeout(function(){
+					// 	console.log("setTimeout gets called");
+					// 	// $(controls[step - 1]).animate({left:'-700px'}).hide();
+					// 	$(controls[step - 1]).hide(0,function(){
+					// 		$(controls[step]).animate({'left':'0px'});
+					// 	});
+					// },100);	
+					$(controls[step - 1]).show().removeClass('shiftLeftIn').removeClass('shiftLeftOut').removeClass('shiftRightOut').removeClass('shiftRightIn').addClass('shiftLeftOut');
+					setTimeout(function(){
+						$(controls[step - 1]).hide().removeClass('shiftLeftOut');
+					},1000);
+					$(controls[step]).show().removeClass('shiftLeftIn').removeClass('shiftLeftOut').removeClass('shiftRightOut').removeClass('shiftRightIn').addClass('shiftLeftIn');
+					// $(controls[step]).removeClass('shiftLeftOut');
+					// $(controls[step]).addClass('shiftLeftIn');
+
 				} else{
-					$(controls[step + 1]).animate({left:'2000px'}).hide("slow",function(){
-						$(controls[step]).animate({left:'-2000px'}).show().animate({left:'0px'});
-					});				
+					// $(controls[step + 1]).animate({left:'2000px'}).hide("slow",function(){
+					// 	$(controls[step]).animate({left:'-2000px'}).show().animate({left:'0px'});
+					// });
+					// $(controls[step]).css('left','-700px').show();
+					// setTimeout(function(){
+					// 	// $(controls[step + 1]).animate({left:'700px'}).hide();
+					// 	$(controls[step + 1]).hide(0,function(){
+					// 		$(controls[step]).animate({'left':'0px'});
+					// 	});
+					// },100);
+					$(controls[step + 1]).show().removeClass('shiftLeftIn').removeClass('shiftLeftOut').removeClass('shiftRightOut').removeClass('shiftRightIn').addClass('shiftRightOut');
+					setTimeout(function(){
+						$(controls[step + 1]).hide();
+					},1000);
+					$(controls[step]).show().removeClass('shiftLeftIn').removeClass('shiftLeftOut').removeClass('shiftRightOut').removeClass('shiftRightIn').addClass('shiftRightIn');
+					// $(controls[step]).removeClass('shiftRightOut');
+					// $(controls[step]).addClass('shiftRightIn');					
 				}
 			}
 			// $(controls).hide();
