@@ -55,6 +55,13 @@
 		return request;
 	};
 
+	//======================
+	// Introductory Card
+	//======================
+
+	$('#skipIntro').click(function(e){
+		gotoStep(nextStep);
+	});
 
 	//======================
 	// Step 1: Login
@@ -1049,6 +1056,14 @@
 
 	var steps = [
 		{
+			ready: function(){
+				return false;
+			},
+			init: function(){
+				return;
+			}
+		},
+		{
 			ready: function () {
 				return true;
 			},
@@ -1436,7 +1451,7 @@
 				controls = $('#steps').children();
 
 			for (var i = 0; i < indicators.length; i++) {
-				if (i <= step) {
+				if (i <= (step - 1)) {
 					$(indicators[i]).addClass('completed');
 				} else {
 					$(indicators[i]).removeClass('completed');
@@ -1475,7 +1490,7 @@
 		}
 		console.log(i);
 
-		gotoStep(i - 1);
+		gotoStep(i);
 	});
 
 })();
