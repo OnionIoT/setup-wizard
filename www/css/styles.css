@@ -28,6 +28,11 @@ button:focus {
 /*    height: auto;*/
 }
 
+#topCard{
+    padding: 0 0;
+    padding-top: 2rem;
+}
+
 .shiftLeftIn{
     -webkit-animation: slideLeftIn 1s;
     -moz-animation: slideLeftIn 1s;
