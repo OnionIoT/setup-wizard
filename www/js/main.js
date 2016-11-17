@@ -1404,12 +1404,19 @@
 
 			steps[step].init();
 			console.log("The value of bSlideLeft is:",bSlideLeft);
-			if(bSlideLeft){
-				$(controls).animate({left:'-2000px'}).hide().animate({left:'0px'});
-				$(controls[step]).animate({left:'2000px'}).show().animate({left:'0px'});
+			if(step == 0){
+				$(controls[step]).show();
 			} else{
-				$(controls).animate({left:'2000px'}).hide().animate({left:'0px'});
-				$(controls[step]).animate({left:'-2000px'}).show().animate({left:'0px'});				
+				if(bSlideLeft){
+					console.log("Should be going forward");
+					$(controls[step - 1]).animate({left:'-2000px'}).hide("slow",function(){
+						$(controls[step]).hide().animate({left:'2000px'}).show().animate({left:'0px'});		
+					});
+				} else{
+					$(controls[step + 1]).animate({left:'2000px'}).hide("slow",function(){
+						$(controls[step]).animate({left:'-2000px'}).show().animate({left:'0px'});
+					});				
+				}
 			}
 			// $(controls).hide();
 			// $(controls[step]).show();
