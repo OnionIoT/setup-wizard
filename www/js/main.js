@@ -635,7 +635,7 @@
 								$('#download-progress').prop('max', data.result[1].image.size);
 								postCheck();
 								clearFields();
-								$('.modal').modal('hide');
+								$('#wifiModal').modal('hide');
 								gotoStep(nextStep);
 							});
 						// });
@@ -868,7 +868,7 @@
 										command: '/etc/init.d/device-client',
 										params: ['restart']
 									}, function () {
-									$('.modal').modal('hide');
+									$('#myModal').modal('hide');
 									gotoStep(nextStep);
 									});
 								} else {
@@ -901,7 +901,7 @@
 									command: '/etc/init.d/device-client',
 									params: ['restart']
 								}, function () {
-								$('.modal').modal('hide');
+								$('#myModal').modal('hide');
 								gotoStep(nextStep);
 								});
 							} else {
