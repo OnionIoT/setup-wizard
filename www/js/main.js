@@ -148,7 +148,7 @@
 	};
 	
 	//Adds an empty network config to the wireless config file
-	var addWirelessNetwork = function (params) {
+	var addWirelessNetwork = function (params, bEnabled) {
 		var overwrite = 0;
 		var overwriteIndex;
 		$.each(savedWifiNetworks, function(key, value) {
@@ -167,6 +167,7 @@
 						config: 'wireless',
 						section: savedWifiNetworks[apNetworkIndex][".name"],
 						values: {
+							ApCliEnable: '1',
 							ApCliSsid: savedWifiNetworks[overwriteIndex].ssid,
 							ApCliAuthMode: savedWifiNetworks[overwriteIndex].encryption,
 							ApCliPassWord: savedWifiNetworks[overwriteIndex].key
@@ -191,6 +192,18 @@
 				type: 'wifi-config',
 				values: params
 			}, function (result) {
+				if (bEnabled) {
+					sendUbusRequest('uci', 'set', {
+						config: 'wireless',
+						section: '@wifi-iface[0]',
+						values: {
+							ApCliEnable: '1',
+							ApCliSsid: params.ssid,
+							ApCliPassWord: params.key,
+							ApCliAuthMode: params.encryption
+						}
+					})
+				}
 				console.log('uci add wireless result:', result);
 				if (result.result[0] === 0) {
 					sendUbusRequest('uci', 'commit', {
@@ -297,8 +310,8 @@
 		// }
 		// var wifiSectionName = '@wifi-iface[' + uciId + ']'
 		// setup the wifi-iface
-		var params 			= genUciNetworkParams(ssid, password, auth, false, true);
-		var wirelessPromise	= addWirelessNetwork(params);
+		var params 			= genUciNetworkParams(ssid, password, auth, false);
+		var wirelessPromise	= addWirelessNetwork(params, true);
 	};
 	
 	// Check to see if the Omega is online!!
@@ -684,6 +697,7 @@
 			config: 'wireless',
 			section: savedWifiNetworks[apNetworkIndex][".name"],
 			values: {
+				ApCliEnable: '1',
 				ApCliSsid: savedWifiNetworks[index].ssid,
 				ApCliAuthMode: savedWifiNetworks[index].encryption,
 				ApCliPassWord: savedWifiNetworks[index].key
@@ -789,7 +803,7 @@
 			deleteNetwork(index);
 		}
 	});
-	
+
 
 	// ==================
 	// Step 3: Cloud Registration

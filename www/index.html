@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html style="width:100%;height:100%">
 	<head>
 		<title>Setup Wizard - Onion Omega</title>
         <meta charset="utf-8" />
@@ -11,7 +11,9 @@
 		<link rel="stylesheet" href="./icons/glyphicons.css" />
 		<link rel="stylesheet" href="./icons/onion.css" />
 	</head>
-	<body>
+	<body style="width:100%;height:100%">
+	<div id="contentContainer">
+	<div id="transparent"></div>
 		<section class="wrapper">
 			<div id="topCard" class="card card-block main">
 				<div class="logoContainer">
@@ -36,7 +38,7 @@
 		        	<div class="card card-block main stepClass" style="margin-top:40px;">
 		        		<article>
 		        			<header>
-		        				<h1 style="font-size:1.5rem;">Welcome To The Omega 2 Setup-Wizard</h1>
+		        				<h1 style="font-size:1.5rem;">Welcome to the Omega2 Setup Wizard</h1>
 		        			</header>
 		        			<br>
 		        			<p>Let's get your Omega2 updated and configured so you can run off and make some amazing things!</p>
@@ -46,7 +48,7 @@
 			        			<button hidden class ="btn btn-secondary btn-block moveLeft">Back</button>
 			        		</div>
 		        			<div class="col-sm-6">
-			        			<button id="skipIntro" type="button" class="btn btn-secondary btn-block moveRight">Login></button>
+			        			<button id="skipIntro" type="button" class="btn btn-secondary btn-block moveRight">Login ></button>
 			        		</div>
 		        		</div>
 		        	</div>
@@ -152,7 +154,7 @@
 							</div>
 						</div>
 							<!-- Modal -->
-							<div id="wifiModal" class="modal fade" role="dialog" style="width100%;height:100%;">
+							<div id="wifiModal" class="modal fade" role="dialog" style="width100%;height:100%;z-index: 1001;" data-backdrop="false">
 							  <div class="modal-dialog">
 
 								<!-- Modal content-->
@@ -247,7 +249,7 @@
 							<button id="registerDeviceButton" type="button" class="btn btn-info btn-block" data-toggle="modal" data-target="#myModal">Register Device on Cloud</button>
 
 							<!-- Modal -->
-							<div id="myModal" class="modal fade" role="dialog" style="width100%;height:100%;">
+							<div id="myModal" class="modal fade" role="dialog" style="width100%;height:100%;" data-backdrop="false">
 							  <div class="modal-dialog">
 
 								<!-- Modal content-->
@@ -340,7 +342,7 @@
 		        </div>
 			</div>
 		</section>
-		
+		</div>
 		<script src="./js/jquery.js"></script>
 		<script src="./js/jquery.storage.js"></script>
 		<script src="./js/bootstrap.js"></script>
