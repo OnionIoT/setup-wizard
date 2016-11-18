@@ -1,10 +1,12 @@
 body {
     background: url('../icons/background.jpg') repeat 0 0;
+    background-attachment: fixed;
     -webkit-animation: 60s linear 0s normal none infinite animate;
     -moz-animation: 60s linear 0s normal none infinite animate;
     -ms-animation: 60s linear 0s normal none infinite animate;
     -o-animation: 60s linear 0s normal none infinite animate;
     animation: 60s linear 0s normal none infinite animate;
+    overflow-x: hidden;
 
 }
 
@@ -47,17 +49,18 @@ button:focus {
     position: relative;
 }
 #transparent{
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     background-color: #1a1a1a;
+    background-attachment: fixed;
     opacity:0.6;
     filter: alpha(opacity=60);
     width: 100%;
     height: 100%;
 }
 .wrapper {
-    position: fixed;
+    position: absolute;
     width: 40rem;
     margin: 0 auto;
     z-index: 10;
@@ -410,6 +413,14 @@ Wifi
 	right: -60px;
 	top: -20px;
 }
+
+#addWifiButton {
+    width: 94%;
+    left: 50%;
+    /* bring your own prefixes */
+    transform: translate(-50%, 0%);
+    z-index: 500;
+}
 		
 /*********************************
 Cloud
@@ -444,7 +455,7 @@ Button Positions
 
 #skipWifiButton {
 	position: relative;
-	top: 60px;
+	top: 40px;
 }
 
 .moveLeft{

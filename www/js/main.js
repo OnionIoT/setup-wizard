@@ -212,19 +212,6 @@
 						if (result.result[0] === 0) {
 							savedWifiNetworks = [];
 							sendUbusRequest('uci','get',{config:"wireless"},function(response){
-								$.each( response.result[1].values, function( key, value ) {
-									savedWifiNetworks.push(value);
-								});
-								$.each(savedWifiNetworks, function(key, value) {
-									if(value.mode === "ap"){
-										currentNetworkSsid = value.ApCliSsid
-										apNetworkIndex = Number(value['.index']);
-										return;
-									}
-									if(key === savedWifiNetworks.length-1){
-										refreshNetworkList();
-									}
-								});
 								console.log('added wireless network');
 							});
 						} else {
