@@ -214,6 +214,8 @@ Progress Indicator
     display: -ms-flexbox;
     display: -webkit-flex;
     display: flex;
+    position:relative;
+    top: -20px;
 }
 
 #steps-indicator > li {
