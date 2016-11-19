@@ -87,7 +87,10 @@
 			console.log(data);
 			if (data && data.error) {
 				showLoginMessage(data.error.message);
-
+				$('#loginCard').removeClass('shakeClass')
+				setTimeout(function(){
+					$('#loginCard').addClass('shakeClass');
+				},100);
 			} else if (data && data.result) {
 				var returnCode = data.result[0];
 
@@ -99,6 +102,10 @@
 				} else {
 					$('#loginButton').prop('disabled', false);
 					showLoginMessage('Login failed.');
+					$('#loginCard').removeClass('shakeClass')
+					setTimeout(function(){
+						$('#loginCard').addClass('shakeClass');
+					},100);
 				}
 			}
 		});
