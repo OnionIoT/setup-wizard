@@ -1,3 +1,10 @@
 #!/bin/bash
 
-rsync --progress --delete -rv www/* root@192.168.3.1:/www
+if [ "$1" == "" ]; then
+    echo "ERROR: Expected Omega's IP address as argument"
+    exit
+fi
+
+ipAddr="$1"
+
+rsync --progress -ra www/* root@$1:/www/setup-wizard
