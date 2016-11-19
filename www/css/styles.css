@@ -452,7 +452,7 @@ Wifi
 Cloud
 **********************************/		
 		
-#iframe-div
+/*#iframe-div
 {
     width    : 94vh;
     height   : 100vh;
@@ -465,7 +465,7 @@ Cloud
     position : absolute;
     left: -350px;
 }
-
+*/
 /*********************************
 Button Positions
 **********************************/	
