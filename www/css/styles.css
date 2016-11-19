@@ -214,7 +214,7 @@ Progress Indicator
     display: -ms-flexbox;
     display: -webkit-flex;
     display: flex;
-    position:relative;
+    position: relative;
     top: -20px;
 }
 
@@ -430,7 +430,7 @@ Cloud
 		
 #iframe-div
 {
-    width    : 100vh;
+    width    : 94vh;
     height   : 100vh;
     overflow : hidden;
     position : relative;
@@ -439,7 +439,7 @@ Cloud
 #iframe
 {
     position : absolute;
-    left     : -350px;
+    left: -350px;
 }
 
 /*********************************
