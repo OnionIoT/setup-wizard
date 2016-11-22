@@ -840,7 +840,7 @@
 	
 	
 	//Get deviceId and Secret from modal window app
-	var receiveMessage = function (result) {
+	var receiveDeviceId = function (result) {
 		if (result.origin !== "https://registerdevice.onion.io")
 		return;
 		
@@ -875,8 +875,8 @@
 										command: '/etc/init.d/device-client',
 										params: ['restart']
 									}, function () {
-									$('#myModal').modal('hide');
-									gotoStep(nextStep);
+									window.removeEventListener("message", receiveDeviceId);
+									window.addEventListener("message", waitForConnect)
 									});
 								} else {
 									console.log('Unable to commit cloud settings.');
@@ -908,8 +908,9 @@
 									command: '/etc/init.d/device-client',
 									params: ['restart']
 								}, function () {
-								$('#myModal').modal('hide');
-								gotoStep(nextStep);
+								console.log('Waiting for connection...');
+								window.removeEventListener("message", receiveDeviceId);
+								window.addEventListener("message", waitForConnect);
 								});
 							} else {
 								console.log('Unable to commit cloud settings.');
@@ -922,7 +923,16 @@
 			}
 		});
 	}
-	
+
+	//Function to go to next step after button in modal is clicked
+	var waitForConnect = function(result) {
+		if (result.origin !== "https://registerdevice.onion.io")
+		return;
+		$('#myModal').modal('hide');
+		gotoStep(nextStep);
+		window.removeEventListener("message", waitForConnect);
+		window.addEventListener("message", receiveDeviceId);
+	}
 
 	//======================
 	// Step 4: Firmware Update
@@ -1324,7 +1334,7 @@
 				
 				//Add iframe source on load
 				$('#iframe').attr('src','https://registerdevice.onion.io');
-				window.addEventListener("message", receiveMessage); //Listening for message from modal
+				window.addEventListener("message", receiveDeviceId); //Listening for message from modal
 
 			}
 
