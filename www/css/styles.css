@@ -122,6 +122,9 @@ button:focus {
     -webkit-animation-timing-function: ease;
 }
 .shakeClass{
+    -webkit-animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
+    -moz-animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
+    -o-animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
     animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
     transform: translate3d(0, 0, 0);
     backface-visibility: hidden;
@@ -145,7 +148,74 @@ button:focus {
     transform: translate3d(4px, 0, 0);
   }
 }
+
+@-webkit-keyframes shake {
+  10%, 90% {
+    transform: translate3d(-1px, 0, 0);
+  }
+  
+  20%, 80% {
+    transform: translate3d(2px, 0, 0);
+  }
+
+  30%, 50%, 70% {
+    transform: translate3d(-4px, 0, 0);
+  }
+
+  40%, 60% {
+    transform: translate3d(4px, 0, 0);
+  }
+}
+
+@-moz-keyframes shake {
+  10%, 90% {
+    transform: translate3d(-1px, 0, 0);
+  }
+  
+  20%, 80% {
+    transform: translate3d(2px, 0, 0);
+  }
+
+  30%, 50%, 70% {
+    transform: translate3d(-4px, 0, 0);
+  }
+
+  40%, 60% {
+    transform: translate3d(4px, 0, 0);
+  }
+}
+
+@-o-keyframes shake {
+  10%, 90% {
+    transform: translate3d(-1px, 0, 0);
+  }
+  
+  20%, 80% {
+    transform: translate3d(2px, 0, 0);
+  }
+
+  30%, 50%, 70% {
+    transform: translate3d(-4px, 0, 0);
+  }
+
+  40%, 60% {
+    transform: translate3d(4px, 0, 0);
+  }
+}
+
 @keyframes slideLeftIn{
+    from{left: 7000px;}
+    to{left: 0px;}
+}
+@-webkit-keyframes  slideLeftIn{
+    from{left: 7000px;}
+    to{left: 0px;}
+}
+@-moz-keyframes slideLeftIn{
+    from{left: 7000px;}
+    to{left: 0px;}
+}
+@-o-keyframes slideLeftIn{
     from{left: 7000px;}
     to{left: 0px;}
 }
@@ -154,8 +224,32 @@ button:focus {
     from{left: 0px;}
     to{left: -7000px;}
 }
+@-webkit-keyframes slideLeftOut{
+    from{left: 0px;}
+    to{left: -7000px;}
+}
+@-moz-keyframes slideLeftOut{
+    from{left: 0px;}
+    to{left: -7000px;}
+}
+@-o-keyframes slideLeftOut{
+    from{left: 0px;}
+    to{left: -7000px;}
+}
 
 @keyframes slideRightIn{
+    from{left: -7000px;}
+    to{left: 0px;}
+}
+@-webkit-keyframes slideRightIn{
+    from{left: -7000px;}
+    to{left: 0px;}
+}
+@-moz-keyframes slideRightIn{
+    from{left: -7000px;}
+    to{left: 0px;}
+}
+@-o-keyframes slideRightIn{
     from{left: -7000px;}
     to{left: 0px;}
 }
@@ -164,6 +258,19 @@ button:focus {
     from{left: 0px;}
     to{left: 7000px;}
 }
+@-webkit-keyframes slideRightOut{
+    from{left: 0px;}
+    to{left: 7000px;}
+}
+@-moz-keyframes slideRightOut{
+    from{left: 0px;}
+    to{left: 7000px;}
+}
+@-o-keyframes slideRightOut{
+    from{left: 0px;}
+    to{left: 7000px;}
+}
+
 /*********************************
 Branding
 **********************************/
