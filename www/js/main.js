@@ -1431,9 +1431,10 @@
 									if (result.result[0] === 0) {
 										console.log('console setup set');
 										sendUbusRequest('onion-helper', 'background', {
-											command: 'console-install-tool',
-											params: []
-										})
+											command: 'console-install-tool'
+										}, function (result) {
+											console.log('THE RESULT OF THE INSTALL TOOL: ', result);
+										});
 									} else {
 										console.log('Unable to edit console settings.');
 									}
