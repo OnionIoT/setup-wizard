@@ -1040,11 +1040,28 @@
 	//Step 5: Setup Complete
 	//======================
 
+	var checkInstallInterval = null;
+
 	$('#completeBackButton').click(function(){
 		console.log("complete back button gets called");
 		gotoStep(preStep);
 	})
 	
+	var checkInstallFunction = function(){
+		console.log("Inside checkInstallFunction");
+
+		sendUbusRequest('file', 'exec', {
+			command: 'opkg',
+			params: ['list-installed']
+		}, function (data){
+			if (data.error && data.error.code === -32002) {
+				clearInterval(checkInstallInterval)
+				$('#console-installed').show();
+				$('#install-console-only').hide();
+			}
+		});
+	};
+
 	function startTimer(){
 		var time = 0;
 		var timerBar = setInterval(function () {
@@ -1362,6 +1379,7 @@
 				if (upgradeRequired === 'true' && isChecked) {
 					$('#upgrade-not-required').hide();
 					$('#install-console-only').hide();
+					$('#console-installed').hide();
 					$('#upgrade-required').hide();
 					$('#downloading').show();
 					$('#completeBackButton').hide();
@@ -1401,6 +1419,7 @@
 				}else if(upgradeRequired === 'true' && !isChecked){
 					$('#upgrade-not-required').hide();
 					$('#install-console-only').hide();
+					$('#console-installed').hide();
 					$('#upgrade-required').hide();
 					$('#downloading').show();
 					$('#completeBackButton').hide();
@@ -1434,6 +1453,10 @@
 											command: 'console-install-tool'
 										}, function (result) {
 											console.log('THE RESULT OF THE INSTALL TOOL: ', result);
+											checkInstallInterval = setInterval(function(){
+												console.log("this",this)
+												checkInstallFunction()
+												}.bind(this),10000);
 										});
 									} else {
 										console.log('Unable to edit console settings.');
@@ -1447,10 +1470,12 @@
 						$('#upgrade-not-required').hide();
 						$('#downloading').hide();
 						$('#install-console-only').show();
+						$('#console-installed').hide();
 						$('#completeBackButton').show();
 					} else {
 						$('#upgrade-required').hide();
 						$('#install-console-only').hide();
+						$('#console-installed').hide();
 						$('#downloading').hide();
 						$('#upgrade-not-required').show();
 						$('#completeBackButton').show();
