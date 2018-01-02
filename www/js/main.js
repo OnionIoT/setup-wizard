@@ -55,6 +55,13 @@
 		return request;
 	};
 
+	//======================
+	// Introductory Card
+	//======================
+
+	$('#skipIntro').click(function(e){
+		gotoStep(nextStep);
+	});
 
 	//======================
 	// Step 1: Login
@@ -80,7 +87,10 @@
 			console.log(data);
 			if (data && data.error) {
 				showLoginMessage(data.error.message);
-
+				$('#loginCard').removeClass('shakeClass')
+				setTimeout(function(){
+					$('#loginCard').addClass('shakeClass');
+				},100);
 			} else if (data && data.result) {
 				var returnCode = data.result[0];
 
@@ -92,6 +102,10 @@
 				} else {
 					$('#loginButton').prop('disabled', false);
 					showLoginMessage('Login failed.');
+					$('#loginCard').removeClass('shakeClass')
+					setTimeout(function(){
+						$('#loginCard').addClass('shakeClass');
+					},100);
 				}
 			}
 		});
@@ -113,7 +127,10 @@
 
 	var availableWifiNetworks,
 		fileSize = '0',
-		omegaOnline = false;
+		omegaOnline = false,
+		apNetworkIndex,
+		currentNetworkIndex,
+		currentNetworkSsid;
 		
 	//Used to display error messages in an alert box
 	var showWifiMessage = function (type, message) {
@@ -138,78 +155,109 @@
 	};
 	
 	//Adds an empty network config to the wireless config file
-	var addWirelessNetwork = function (params) {
-		sendUbusRequest('uci', 'add', {
-			config: 'wireless',
-			type: 'wifi-iface',
-			values: params
-		}, function (result) {
-			console.log('uci add wireless result:', result);
-			if (result.result[0] === 0) {
-				sendUbusRequest('uci', 'commit', {
-						config: 'wireless'
-				}, function (result) {
-					if (result.result[0] === 0) {
-						savedWifiNetworks = [];
-						sendUbusRequest('uci','get',{config:"wireless"},function(response){
-							$.each( response.result[1].values, function( key, value ) {
-								savedWifiNetworks.push(value);
-							});
-							$.each(savedWifiNetworks, function(key, value) {
-								if(value.mode !== "sta")
-									return;
-								if(value.disabled !== '1'){
-									currentNetworkIndex = Number(value['.index']);
-									return;
-								}
-							});
-							console.log('added wireless network');
-						});
-					} else {
-						console.log('Unable to add wireless network.');
-					}
-					if(params.disabled === "0"){
-						changeNetwork((savedWifiNetworks.length-1), currentNetworkIndex, false, false);
-					}
-				});
-			} else {
-				console.log('Unable to add wireless network.');
+	var addWirelessNetwork = function (params, bEnabled) {
+		var overwrite = 0;
+		var overwriteIndex;
+		$.each(savedWifiNetworks, function(key, value) {
+			if(value.ssid === params.ssid){
+				overwriteIndex = key;
+				overwrite = 1;
 			}
 		});
+		if(overwrite === 1){
+			sendUbusRequest('uci', 'set', {
+				config: 'wireless',
+				section: savedWifiNetworks[overwriteIndex][".name"],
+				values: params
+			}, function (result) {
+					sendUbusRequest('uci', 'set', {
+						config: 'wireless',
+						section: savedWifiNetworks[apNetworkIndex][".name"],
+						values: {
+							ApCliEnable: '1',
+							ApCliSsid: savedWifiNetworks[overwriteIndex].ssid,
+							ApCliAuthMode: savedWifiNetworks[overwriteIndex].encryption,
+							ApCliPassWord: savedWifiNetworks[overwriteIndex].key
+						}
+					}, function(response){
+						sendUbusRequest('uci', 'commit', {
+								config: 'wireless'
+						}, function (response){
+							currentNetworkSsid = savedWifiNetworks[overwriteIndex].ssid;
+							sendUbusRequest('file', 'exec', {
+								command: 'wifi',
+								params: []
+							}, function(){
+								refreshNetworkList();
+							});
+						});
+					});
+				});
+		}else {
+			sendUbusRequest('uci', 'add', {
+				config: 'wireless',
+				type: 'wifi-config',
+				values: params
+			}, function (result) {
+				if (bEnabled) {
+					sendUbusRequest('uci', 'set', {
+						config: 'wireless',
+						section: '@wifi-iface[0]',
+						values: {
+							ApCliEnable: '1',
+							ApCliSsid: params.ssid,
+							ApCliPassWord: params.key,
+							ApCliAuthMode: params.encryption
+						}
+					})
+				}
+				console.log('uci add wireless result:', result);
+				if (result.result[0] === 0) {
+					sendUbusRequest('uci', 'commit', {
+							config: 'wireless'
+					}, function (result) {
+						if (result.result[0] === 0) {
+							savedWifiNetworks = [];
+							sendUbusRequest('uci','get',{config:"wireless"},function(response){
+								console.log('added wireless network');
+							});
+						} else {
+							console.log('Unable to add wireless network.');
+						}
+					});
+				} else {
+					console.log('Unable to add wireless network.');
+				}
+			});
+		}
 	};
 	
 	//Generates the parameters for the uci set wireless ubus call
 	var genUciNetworkParams = function (ssid, password, auth, bApNetwork, bEnabled) {
 		var params = {};
 		// set the basic info
-		params.device 		= 'radio0'
 		params.ssid 		= ssid;
 		params.encryption 	= auth;
-		// set the network parameters based on if AP or STA type
-		if (bApNetwork) {
-			params.network 	= 'wlan';
-			params.mode 	= 'ap';
-		} else {
-			params.network 	= 'wwan';
-			params.mode 	= 'sta';
-		}				
+		// set the network parameters based on if AP or STA type	
 		// generate the values to set based on the encryption type
 		if (auth === 'wep') {
+			params.encryption 	= auth;
 			params.key 		= '1';
 			params.key1 	= password;
 		}
-		else if (auth === 'psk' || auth === 'psk2') {
+		else if (auth === 'psk') {
+			params.encryption 	= 'WPA1PSK';
+			params.key 		= password;
+		}
+		else if (auth === 'psk2') {
+			params.encryption 	= 'WPA2PSK';
 			params.key 		= password;
 		}
 		else {
+			params.encryption 	= 'NONE';
 			params.key 		= '';
 		}
-		// enable or disable
-		if (bEnabled) {
-			params.disabled = '0'
-		} else {
-			params.disabled = '1'
-		}
+
 		return params;
 	};
 	
@@ -222,22 +270,22 @@
 					// disabled = "1"
 				// }
 			// }, function(){
-				// sendUbusRequest('uci', 'set', {
-					// config: 'wireless',
-					// section: sectionName,
-					// values: params
-				// }, function (result) {
-					// console.log('uci set wireless result:', result);
-					// if (result.result[0] === 0) {
-						// sendUbusRequest('uci', 'commit', {
-								// config: 'wireless'
-						// }, function (result) {
-							// if (result.result[0] === 0) {
-								// console.log('Wireless set');
-								// sendUbusRequest('file', 'exec', {
-								// command: 'wifimanager',
-								// params: []
-							// })
+			// 	sendUbusRequest('uci', 'set', {
+			// 		config: 'wireless',
+			// 		section: sectionName,
+			// 		values: params
+			// 	}, function (result) {
+			// 		console.log('uci set wireless result:', result);
+			// 		if (result.result[0] === 0) {
+			// 			sendUbusRequest('uci', 'commit', {
+			// 					config: 'wireless'
+			// 			}, function (result) {
+			// 				if (result.result[0] === 0) {
+			// 					console.log('Wireless set');
+			// 					sendUbusRequest('file', 'exec', {
+			// 					command: 'wifimanager',
+			// 					params: []
+			// 				})
 							// } else {
 								// console.log('Unable to edit wireless network settings.');
 							// }
@@ -251,13 +299,13 @@
 
 	//Function to generate params and set wireless config
 	var setupWifiNetwork = function (ssid, password, auth, uciId) {
-		if (uciId == null) {
-			var uciId 			= -1;
-		}
-		var wifiSectionName = '@wifi-iface[' + uciId + ']'
+		// if (uciId == null) {
+		// 	var uciId 			= -1;
+		// }
+		// var wifiSectionName = '@wifi-iface[' + uciId + ']'
 		// setup the wifi-iface
-		var params 			= genUciNetworkParams(ssid, password, auth, false, true);
-		var wirelessPromise	= addWirelessNetwork(params);
+		var params 			= genUciNetworkParams(ssid, password, auth, false);
+		var wirelessPromise	= addWirelessNetwork(params, true);
 	};
 	
 	// Check to see if the Omega is online!!
@@ -302,7 +350,7 @@
 		$('#wifi-scan-icon').addClass('rotate');
 
 		sendUbusRequest('onion', 'wifi-scan', {
-			device: 'wlan0'
+			device: 'ra0'
 		}, function (data) {
 			$('#wifi-scan-icon').removeClass('rotate');
 			$('#wifi-scan-btn').prop('disabled', false);
@@ -337,7 +385,7 @@
 		$('#wifi-scan-icon-modal').addClass('rotate');
 
 		sendUbusRequest('onion', 'wifi-scan', {
-			device: 'wlan0'
+			device: 'ra0'
 		}, function (data) {
 			$('#wifi-scan-icon-modal').removeClass('rotate');
 			$('#wifi-scan-btn-modal').prop('disabled', false);
@@ -377,7 +425,7 @@
 		$('#wifi-ssid').val(network.ssid);
 		$('#wifi-key').val('');
 
-		if (network.encryption === 'none') {
+		if (network.encryption === 'NONE') {
 			$('#wifi-encryption').val('none');
 		} else if (network.encryption.indexOf('WPA2') !== -1) {
 			$('#wifi-encryption').val('psk2');
@@ -396,7 +444,7 @@
 		$('#wifi-ssid-modal').val(network.ssid);
 		$('#wifi-key-modal').val('');
 
-		if (network.encryption === 'none') {
+		if (network.encryption === 'NONE') {
 			$('#wifi-encryption-modal').val('none');
 		} else if (network.encryption.indexOf('WPA2') !== -1) {
 			$('#wifi-encryption-modal').val('psk2');
@@ -454,7 +502,6 @@
 				postCheck();
 				showWifiMessage('danger', 'Please enter a valid password. (WPA and WPA2 passwords are between 8 and 63 characters)');
 			}
-			
 		}else if($('#wifi-encryption').val() === 'wep'){
 			if($('#wifi-key').val().length !== 5){
 				if (checkOnlineRequest) {
@@ -471,7 +518,7 @@
 				postCheck();
 				showWifiMessage('danger', 'Please enter a valid password. (WEP passwords are 5 or 13 characters long)');
 			}
-		}else{
+		}
 			if(checkOnlineRequest !== null){
 				var connectionCheckInterval = setInterval(function () {
 					isOnline(function () {
@@ -511,7 +558,6 @@
 				//Connect to the network
 				setupWifiNetwork($('#wifi-ssid').val(), $('#wifi-key').val(), $('#wifi-encryption').val());
 			}
-		}
 	});
 	
 	$('#wifi-form-modal').submit(function (e) {
@@ -576,7 +622,7 @@
 				postCheck();
 				showWifiMessageModal('danger', 'Please enter a valid password. (WEP passwords are 5 or 13 characters long)');
 			}
-		}else{
+		}
 			if(checkOnlineRequest !== null){
 				var connectionCheckInterval = setInterval(function () {
 					isOnline(function () {
@@ -596,7 +642,7 @@
 								$('#download-progress').prop('max', data.result[1].image.size);
 								postCheck();
 								clearFields();
-								$('.modal').modal('hide');
+								$('#wifiModal').modal('hide');
 								gotoStep(nextStep);
 							});
 						// });
@@ -618,9 +664,8 @@
 				//Connect to the network
 				var params = genUciNetworkParams($('#wifi-ssid-modal').val(), $('#wifi-key-modal').val(), $('#wifi-encryption-modal').val(), false, false);
 				addWirelessNetwork(params);
-				refreshNetworkList();
 			}
-		}
+
 	});
 	
 	$('#skipWifiButton').click(function(){
@@ -641,49 +686,25 @@
 	
 	//Changes the network by disabling the current network, followed by enabling the selected network, and refreshing the network list
 	var changeNetwork = function (index, currentIndex, deleteConnectedNetwork, refresh) {
-		if(savedWifiNetworks[currentIndex].mode === "sta"){
-			sendUbusRequest('uci', 'set', {
-				config: 'wireless',
-				section: savedWifiNetworks[currentIndex][".name"],
-				values: {
-					disabled: '1'
-				}
-			}, function(response){
-				sendUbusRequest('uci', 'set', {
-					config: 'wireless',
-					section: savedWifiNetworks[index][".name"],
-					values: {
-						disabled: '0'
-					}
+
+		sendUbusRequest('uci', 'set', {
+			config: 'wireless',
+			section: savedWifiNetworks[apNetworkIndex][".name"],
+			values: {
+				ApCliEnable: '1',
+				ApCliSsid: savedWifiNetworks[index].ssid,
+				ApCliAuthMode: savedWifiNetworks[index].encryption,
+				ApCliPassWord: savedWifiNetworks[index].key
+			}
+		}, function(response){
+			sendUbusRequest('uci', 'commit', {
+					config: 'wireless'
+			}, function (response){
+				currentNetworkSsid = savedWifiNetworks[index].ssid;
+				sendUbusRequest('file', 'exec', {
+					command: 'wifi',
+					params: []
 				}, function(response){
-					sendUbusRequest('uci', 'commit', {
-							config: 'wireless'
-					}, function (response){
-						if(deleteConnectedNetwork){
-							deleteNetwork(currentNetworkIndex); //If the currently connected network is to be deleted, delete it and continue
-						}
-						if(refresh){
-							refreshNetworkList(); //Otherwise refresh the network list and continue
-						}
-						currentNetworkIndex = index;
-						sendUbusRequest('file', 'exec', {
-							command: 'wifi',
-							params: []
-						});
-					});
-				});
-			});
-		} else {
-			sendUbusRequest('uci', 'set', {
-				config: 'wireless',
-				section: savedWifiNetworks[index][".name"],
-				values: {
-					disabled: '0'
-				}
-			}, function(response){
-				sendUbusRequest('uci', 'commit', {
-						config: 'wireless'
-				}, function (response){
 					if(deleteConnectedNetwork){
 						deleteNetwork(currentNetworkIndex); //If the currently connected network is to be deleted, delete it and continue
 					}
@@ -691,15 +712,11 @@
 						refreshNetworkList(); //Otherwise refresh the network list and continue
 					}
 					currentNetworkIndex = index;
-					sendUbusRequest('file', 'exec', {
-						command: 'wifi',
-						params: []
-					});
 				});
 			});
-		}
-	}
-	
+		});
+	};
+
 	//Removes the network at "index"
 	var deleteNetwork = function(index) {
 		sendUbusRequest('uci', 'delete', {
@@ -726,11 +743,12 @@
 				savedWifiNetworks.push(value);
 			});
 			$.each(savedWifiNetworks, function(key, value) {
-				if(value.mode !== "sta")
+				if(value.type === 'ralink')
 					return;
-				if(value.disabled !== '1'){
-					currentNetworkIndex = Number(value['.index']);
-					$('#network-list').append(" <div class='list-group-item layout horizontal end'><span id='connectedNetwork'class='glyphicons glyphicons-wifi'></span><span>"+ value.ssid +"</span><div id='" + value['.index'] + "'><a class='glyphicons glyphicons-remove' href='#' data-toggle='tooltip' title='Delete Network'></a></div></div>");
+				if(value.mode === "ap") {
+					apNetworkIndex = value['.index'];
+					currentNetworkSsid = value.ApCliSsid;
+					$('#network-list').append(" <div class='list-group-item layout horizontal end'><span id='connectedNetwork'class='glyphicons glyphicons-wifi'></span><span>"+ value.ApCliSsid +"</span><div id='" + value['.index'] + "'><a class='glyphicons glyphicons-remove' href='#' data-toggle='tooltip' title='Delete Network'></a></div></div>");
 					if (($('#network-list > div').length) <= 1) {
 						$('.glyphicons-remove').hide();
 					} else {
@@ -738,12 +756,21 @@
 					}
 					return;
 				}
-				$('#network-list').append(" <div class='list-group-item layout horizontal end'><span class='glyphicons glyphicons-wifi'></span><span>"+ value.ssid +"</span><div id='" + value['.index'] + "'><a class='glyphicons glyphicons-remove' href='#' data-toggle='tooltip' title='Delete Network'></a><a class='glyphicons glyphicons-ok' href='#' data-toggle='tooltip' title='Enable Network'></a></div></div> ");
-				if (($('#network-list > div').length) <= 1) {
-					$('.glyphicons-remove').hide();
-				} else {
-					$('.glyphicons-remove').show();
+				else {
+					if (value.ssid === currentNetworkSsid) {
+						currentNetworkIndex = Number(value['.index']);
+						return;
+					}else{
+						$('#network-list').append(" <div class='list-group-item layout horizontal end'><span class='glyphicons glyphicons-wifi'></span><span>"+ value.ssid +"</span><div id='" + value['.index'] + "'><a class='glyphicons glyphicons-remove' href='#' data-toggle='tooltip' title='Delete Network'></a><a class='glyphicons glyphicons-ok' href='#' data-toggle='tooltip' title='Enable Network'></a></div></div> ");
+						if (($('#network-list > div').length) <= 1) {
+							$('.glyphicons-remove').hide();
+						} else {
+							$('.glyphicons-remove').show();
+						}
+						return;
+					}
 				}
+				
 			});
 		});
 		$('#wifi-list').show();
@@ -770,7 +797,7 @@
 			deleteNetwork(index);
 		}
 	});
-	
+
 
 	// ==================
 	// Step 3: Cloud Registration
@@ -813,7 +840,7 @@
 	
 	
 	//Get deviceId and Secret from modal window app
-	var receiveMessage = function (result) {
+	var receiveDeviceId = function (result) {
 		if (result.origin !== "https://registerdevice.onion.io")
 		return;
 		
@@ -848,8 +875,8 @@
 										command: '/etc/init.d/device-client',
 										params: ['restart']
 									}, function () {
-									$('.modal').modal('hide');
-									gotoStep(nextStep);
+									window.removeEventListener("message", receiveDeviceId);
+									window.addEventListener("message", waitForConnect)
 									});
 								} else {
 									console.log('Unable to commit cloud settings.');
@@ -881,8 +908,9 @@
 									command: '/etc/init.d/device-client',
 									params: ['restart']
 								}, function () {
-								$('.modal').modal('hide');
-								gotoStep(nextStep);
+								console.log('Waiting for connection...');
+								window.removeEventListener("message", receiveDeviceId);
+								window.addEventListener("message", waitForConnect);
 								});
 							} else {
 								console.log('Unable to commit cloud settings.');
@@ -895,7 +923,16 @@
 			}
 		});
 	}
-	
+
+	//Function to go to next step after button in modal is clicked
+	var waitForConnect = function(result) {
+		if (result.origin !== "https://registerdevice.onion.io")
+		return;
+		$('#myModal').modal('hide');
+		gotoStep(nextStep);
+		window.removeEventListener("message", waitForConnect);
+		window.addEventListener("message", receiveDeviceId);
+	}
 
 	//======================
 	// Step 4: Firmware Update
@@ -1003,11 +1040,28 @@
 	//Step 5: Setup Complete
 	//======================
 
+	var checkInstallInterval = null;
+
 	$('#completeBackButton').click(function(){
 		console.log("complete back button gets called");
 		gotoStep(preStep);
 	})
 	
+	var checkInstallFunction = function(){
+		console.log("Inside checkInstallFunction");
+
+		sendUbusRequest('file', 'exec', {
+			command: 'opkg',
+			params: ['list-installed']
+		}, function (data){
+			if (data.error && data.error.code === -32002) {
+				clearInterval(checkInstallInterval)
+				$('#console-installed').show();
+				$('#install-console-only').hide();
+			}
+		});
+	};
+
 	function startTimer(){
 		var time = 0;
 		var timerBar = setInterval(function () {
@@ -1086,7 +1140,7 @@
 					command: 'wget',
 					params: ['--spider', 'http://repo.onion.io/omega2/images']
 				}, function (data){
-					if (data.result[1].code === 0) {
+					if (data.result.length === 2 && data.result[1].code === 0) {
 						omegaOnline = true;
 						
 						refreshNetworkList();
@@ -1110,11 +1164,39 @@
 							$('#networkTable').show();
 						});
 					} else {
-						// $('#wifi-list').hide();
-						// $('#wifi-list').show();
-						$('#wifiLoading').hide();
-						$('#networkTable').hide();
-						$('#wifi-connect').show();
+						sendUbusRequest('file', 'exec', {
+							command: 'wget',
+							params: ['--spider', 'http://repo.onion.io/omega2/images']
+						}, function (data){
+							if (data.result.length === 2 && data.result[1].code === 0) {
+								omegaOnline = true;
+								
+								refreshNetworkList();
+								// $('#wifi-connect').hide();
+								// $('#wifiLoading').hide();
+								// $('#wifi-list').show();
+								// $('#networkTable').show();
+								console.log('Already connected to the internet!')
+								sendUbusRequest('onion', 'oupgrade', {
+									params: {
+										check: ''
+									}
+								}, function (data) {
+									binName = data.result[1].image.local;
+									upgradeRequired = data.result[1].upgrade;
+									fileSize = data.result[1].image.size;
+									$('#download-progress').prop('max', data.result[1].image.size);
+									$('#wifi-connect').hide();
+									$('#wifiLoading').hide();
+									$('#wifi-list').show();
+									$('#networkTable').show();
+								});
+							} else {
+								$('#wifiLoading').hide();
+								$('#networkTable').hide();
+								$('#wifi-connect').show();
+							}
+						});
 					}
 				});
 				
@@ -1269,7 +1351,7 @@
 				
 				//Add iframe source on load
 				$('#iframe').attr('src','https://registerdevice.onion.io');
-				window.addEventListener("message", receiveMessage); //Listening for message from modal
+				window.addEventListener("message", receiveDeviceId); //Listening for message from modal
 
 			}
 
@@ -1297,6 +1379,7 @@
 				if (upgradeRequired === 'true' && isChecked) {
 					$('#upgrade-not-required').hide();
 					$('#install-console-only').hide();
+					$('#console-installed').hide();
 					$('#upgrade-required').hide();
 					$('#downloading').show();
 					$('#completeBackButton').hide();
@@ -1336,6 +1419,7 @@
 				}else if(upgradeRequired === 'true' && !isChecked){
 					$('#upgrade-not-required').hide();
 					$('#install-console-only').hide();
+					$('#console-installed').hide();
 					$('#upgrade-required').hide();
 					$('#downloading').show();
 					$('#completeBackButton').hide();
@@ -1365,6 +1449,15 @@
 								}, function (result) {
 									if (result.result[0] === 0) {
 										console.log('console setup set');
+										sendUbusRequest('onion-helper', 'background', {
+											command: 'console-install-tool'
+										}, function (result) {
+											console.log('THE RESULT OF THE INSTALL TOOL: ', result);
+											checkInstallInterval = setInterval(function(){
+												console.log("this",this)
+												checkInstallFunction()
+												}.bind(this),10000);
+										});
 									} else {
 										console.log('Unable to edit console settings.');
 									}
@@ -1377,10 +1470,12 @@
 						$('#upgrade-not-required').hide();
 						$('#downloading').hide();
 						$('#install-console-only').show();
+						$('#console-installed').hide();
 						$('#completeBackButton').show();
 					} else {
 						$('#upgrade-required').hide();
 						$('#install-console-only').hide();
+						$('#console-installed').hide();
 						$('#downloading').hide();
 						$('#upgrade-not-required').show();
 						$('#completeBackButton').show();
@@ -1418,13 +1513,44 @@
 			} else{
 				if(bSlideLeft){
 					console.log("Should be going forward");
-					$(controls[step - 1]).animate({left:'-2000px'}).hide("slow",function(){
-						$(controls[step]).hide().animate({left:'2000px'}).show().animate({left:'0px'});		
-					});
+					// $(controls[step]).hide();
+					// $(controls[step]).css('left','700px').show();
+					// setTimeout(function(){
+					// 	console.log("setTimeout gets called");
+					// 	// $(controls[step - 1]).animate({left:'-700px'}).hide();
+					// 	$(controls[step - 1]).hide(0,function(){
+					// 		$(controls[step]).animate({'left':'0px'});
+					// 	});
+					// },100);	
+					$(controls[step - 1]).show().removeClass('shiftLeftIn').removeClass('shiftLeftOut').removeClass('shiftRightOut').removeClass('shiftRightIn').addClass('shiftLeftOut');
+					setTimeout(function(){
+						$(controls[step - 1]).hide();
+						$(controls[step]).show().removeClass('shiftLeftIn').removeClass('shiftLeftOut').removeClass('shiftRightOut').removeClass('shiftRightIn').addClass('shiftLeftIn').css('height','auto');
+					},1000);
+					// $(controls[step]).show().removeClass('shiftLeftIn').removeClass('shiftLeftOut').removeClass('shiftRightOut').removeClass('shiftRightIn').addClass('shiftLeftIn').css('height','auto');
+					// $(controls[step]).removeClass('shiftLeftOut');
+					// $(controls[step]).addClass('shiftLeftIn');
+
 				} else{
-					$(controls[step + 1]).animate({left:'2000px'}).hide("slow",function(){
-						$(controls[step]).animate({left:'-2000px'}).show().animate({left:'0px'});
-					});				
+					// $(controls[step + 1]).animate({left:'2000px'}).hide("slow",function(){
+					// 	$(controls[step]).animate({left:'-2000px'}).show().animate({left:'0px'});
+					// });
+					// $(controls[step]).css('left','-700px').show();
+					// setTimeout(function(){
+					// 	// $(controls[step + 1]).animate({left:'700px'}).hide();
+					// 	$(controls[step + 1]).hide(0,function(){
+					// 		$(controls[step]).animate({'left':'0px'});
+					// 	});
+					// },100);
+					$(controls[step + 1]).show().removeClass('shiftLeftIn').removeClass('shiftLeftOut').removeClass('shiftRightOut').removeClass('shiftRightIn').addClass('shiftRightOut');
+					setTimeout(function(){
+						$(controls[step + 1]).hide();
+						$(controls[step]).show().removeClass('shiftLeftIn').removeClass('shiftLeftOut').removeClass('shiftRightOut').removeClass('shiftRightIn').addClass('shiftRightIn').css('height','auto');
+
+					},1000);
+					// $(controls[step]).show().removeClass('shiftLeftIn').removeClass('shiftLeftOut').removeClass('shiftRightOut').removeClass('shiftRightIn').addClass('shiftRightIn').css('height','auto');
+					// $(controls[step]).removeClass('shiftRightOut');
+					// $(controls[step]).addClass('shiftRightIn');					
 				}
 			}
 			// $(controls).hide();
@@ -1443,7 +1569,7 @@
 		}
 		console.log(i);
 
-		gotoStep(i - 1);
+		gotoStep(i);
 	});
 
 })();

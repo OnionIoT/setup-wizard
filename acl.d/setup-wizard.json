@@ -16,6 +16,9 @@
 				],
 				"uci": [
 					"*"
+				],
+				"onion-helper": [
+					"background"
 				]
 			},
         	"uci": [
@@ -40,6 +43,9 @@
 				],
 				"uci": [
 					"*"
+				],
+				"onion-helper": [
+					"background"
 				]
 			},
 			"uci": [

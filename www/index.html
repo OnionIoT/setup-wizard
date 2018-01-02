@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html style="width:100%;height:100%">
 	<head>
 		<title>Setup Wizard - Onion Omega</title>
         <meta charset="utf-8" />
@@ -11,9 +11,11 @@
 		<link rel="stylesheet" href="./icons/glyphicons.css" />
 		<link rel="stylesheet" href="./icons/onion.css" />
 	</head>
-	<body>
+	<body style="width:100%;height:100%">
+	<div id="contentContainer">
+	<div id="transparent"></div>
 		<section class="wrapper">
-			<div class="card card-block main">
+			<div id="topCard" class="card card-block main">
 				<div class="logoContainer">
 					<div class="span4"></div>
 					<div class="span4">
@@ -33,6 +35,7 @@
 		    <div>
 		        <div id="steps">
 		        	<!-- Introduction Card  -->
+<<<<<<< HEAD
 		        	<div class="card card-block main" style="margin-top:40px;">
 		        		<article>
 		        			<header>
@@ -42,9 +45,26 @@
 		        			<p>Let's get your Omega2 updated and configured so you can run off and make some amazing things!</p>
 		        		</article>
 
+=======
+		        	<div class="card card-block main stepClass" style="margin-top:40px;">
+		        		<article>
+		        			<header>
+		        				<h1 style="font-size:1.5rem;">Welcome to the Omega2 Setup Wizard</h1>
+		        			</header>
+		        			<br>
+		        			<p>Let's get your Omega2 configured and ready for you to make some amazing things!</p>
+		        		</article>
+		        		<div class='row'>
+			        		<div class="col-sm-6">
+			        		</div>
+		        			<div class="col-sm-6">
+			        			<button id="skipIntro" type="button" class="btn btn-secondary btn-block moveRight">Start!</button>
+			        		</div>
+		        		</div>
+>>>>>>> 069d921e9d2233c625b8464bf6b3f27ee03a3276
 		        	</div>
 		        	<!-- Step 1: Login to Omega -->
-		        	<div class="card card-block main" style="margin-top:40px;">
+		        	<div class="card card-block main stepClass" id="loginCard" style="margin-top:40px;">
 		        		<div class="row">
 		        			<div class="col-lg-8 col-md-8 col-sm-8 col-xs-8 col-lg-offset-2 col-md-offset-2 col-sm-offset-2 col-xs-offset-2">
 				        		<form id="login-form">
@@ -59,14 +79,14 @@
 
 									<div id="login-message"></div>
 
-									<button type="submit" class="btn btn-info">Log In</button>
+									<button id="loginButton" type="submit" class="btn btn-info">Log In</button>
 								</form>
 							</div>
 						</div>
 		        	</div>
 
 		        	<!-- Step 2: Setup WiFi -->
-		        	<div class="card card-block main" style="margin-top:40px;">
+		        	<div class="card card-block main stepClass" style="margin-top:40px;">
 						<div id="wifiLoading" class="loading"></div>
 						<div id="wifi-connect">
 							<form id="wifi-form">
@@ -133,7 +153,7 @@
 									
 							</div>
 								<div class="row">
-								<button type="button" id="addWifiButton" class="btn btn-info btn-block" data-toggle="modal" data-target="#wifiModal">Add WiFi Network</button>
+								<button type="button" id="addWifiButton" class="btn btn-info" data-toggle="modal" data-target="#wifiModal" data-backdrop="false" data-keyboard="true">Add WiFi Network</button>
 								</div>
 							<div class="row">
 									<div class="col-sm-6">
@@ -145,11 +165,14 @@
 							</div>
 						</div>
 							<!-- Modal -->
-							<div id="wifiModal" class="modal fade" role="dialog" style="width100%;height:100%;">
+							<div id="wifiModal" class="modal fade" tabindex="-1" role="dialog" style="width100%;height:100%;z-index: 1001;">
 							  <div class="modal-dialog">
 
 								<!-- Modal content-->
 								<div class="modal-content">
+									<div class="modal-header">
+										<button type="button" class="close" data-dismiss="modal">&times;</button>
+									</div>
 									<div class="modal-body">
 									<form id="wifi-form-modal">
 										<div class="form-group row">
@@ -218,9 +241,9 @@
 
 		        	<!-- Step 3: Setup the cloud here -->
 
-		        	<div class="card card-block main" style="margin-top:40px;">
+		        	<div class="card card-block main stepClass" style="margin-top:40px;">
 		        		<div id="cloudLoading" class="loading"></div>
-		        		<div id="cloudText"><p>Register your Omega on the Onion Cloud.</p>
+		        		<div id="cloudText"><p>Click the button below to register your Omega on the Onion Cloud!</p>
 						<p>Using the Onion Cloud, you can remotely manage and control your device, use the Cloud Compile service, and use apps to interact with your device.</p></div>
 						<div id="deviceId-list" style="display:none;">
 							<table class="table table-bordered">
@@ -237,20 +260,21 @@
 			        		<!-- <button id="setupCloudButton" type="button" class="btn btn-success btn-block">Setup Cloud</button> -->
 							<!-- <button type="button" class="modal-open">Setup Cloud</button> -->
 								<!-- Trigger the modal with a button -->
-							<button id="registerDeviceButton" type="button" class="btn btn-info btn-block" data-toggle="modal" data-target="#myModal">Register Device on Cloud</button>
+							<button id="registerDeviceButton" type="button" class="btn btn-info btn-block" data-toggle="modal" data-target="#myModal" data-backdrop="false">Register Device on Cloud</button>
 
 							<!-- Modal -->
-							<div id="myModal" class="modal fade" role="dialog" style="width100%;height:100%;">
-							  <div class="modal-dialog">
+							<div id="myModal" class="modal fade" tabindex="-1" role="dialog" style="width:100%;height:100%;overflow:hidden;">
+							  <div class="modal-dialog" style="width:100%;height:100%;"">
 
 								<!-- Modal content-->
-								<div class="modal-content">
-								  <!-- <div class="modal-header"> -->
-									<!-- <button type="button" class="close" data-dismiss="modal">&times;</button> -->
+								<div class="modal-content" style="width:100%;height:100%;">
+									<div class="modal-header">
+										<button type="button" class="close" data-dismiss="modal">&times;</button>
 									<!-- <h4 class="modal-title">Modal Header</h4> -->
-								  <!-- </div> -->
-								  <div id="iframe-div">
-									<iframe id="iframe" src="" style="width:100vw;height:100vh;"></iframe>
+								  </div>
+
+								  <div class="modal-body" style="width:100%;height:100%;padding:0;">
+									<iframe id="iframe" src="" frameborder="0" style="width:100%;height:100%;"></iframe>
 								  </div>
 								  <!-- <div class="modal-footer"> -->
 									<!-- <button type="button" class="btn btn-default" data-dismiss="modal">Close</button> -->
@@ -272,7 +296,7 @@
 
 
 		        	<!-- Step 4: Software Updates -->
-					<div class="card card-block main" style="margin-top:40px;">
+					<div class="card card-block main stepClass" style="margin-top:40px;">
 						<!-- <h3 class="m-b-md">Firmware Update</h3> -->
 						<div id="firmwareText" class="alert alert-warning"></div>
 						<div style="text-align:center; margin-left:-50px;" class="checkbox">
@@ -294,7 +318,7 @@
 					</div>
 					
 		        	<!-- Step 5: Finished! -->
-		        	<div class="card card-block main" style="margin-top:40px;">
+		        	<div class="card card-block main stepClass" style="margin-top:40px;">
 						<div id="downloading">
 							<h4 class="m-b-md">The Omega is downloading the latest firmware, sit tight!</h4>
 							<progress id="download-progress" class="progress progress-striped progress-animated" value="0" max="0"></progress>
@@ -319,9 +343,15 @@
 							</div>
 						</div>
 						<div id="install-console-only">
-							<div class="alert alert-success m-t-lg" role="alert">
+							<div class="alert alert-warning m-t-lg" role="alert">
 								<p class="text-center"><strong>You have successfully set up your Omega!</strong></p>
 								<p class="text-center">Please wait while the console is installed.</p>
+							</div>
+						</div>
+						<div id="console-installed">
+							<div class="alert alert-success m-t-lg" role="alert">
+								<p class="text-center"><strong>You have successfully set up your Omega!</strong></p>
+								<p class="text-center">The Console has been installed! Please refresh your browser to open the Console.</p>
 							</div>
 						</div>
 						<div class="row">
@@ -333,7 +363,7 @@
 		        </div>
 			</div>
 		</section>
-		
+		</div>
 		<script src="./js/jquery.js"></script>
 		<script src="./js/jquery.storage.js"></script>
 		<script src="./js/bootstrap.js"></script>
