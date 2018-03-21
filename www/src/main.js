@@ -124,6 +124,10 @@
 	// Step 2: Setup Wi-Fi
 	//======================
 
+	var wifiParams = {};
+	wifiParams['availableWifiNetworks'] = [];
+	wifiParams['configuredWifiNetworks'] = [];
+
 	var availableWifiNetworks,
 		fileSize = '0',
 		omegaOnline = false,
@@ -298,9 +302,6 @@
 	var scanWifiNetwork = function (elementData) {
 		showScanMessage(elementData.dropdown, 'Scanning...');
 
-		// old code
-		// $('#wifi-scan-btn').prop('disabled', true);
-		// $('#wifi-scan-icon').addClass('rotate');
 		$(elementData.button).prop('disabled', true);
 		$(elementData.icon).addClass('rotate');
 
@@ -314,11 +315,11 @@
 			} else {
 				// populate the dropdown with the network results
 				showScanMessage(elementData.dropdown, 'Choose Wi-Fi Network:');
-				availableWifiNetworks = data;
+				wifiParams.availableWifiNetworks = data;
 
-				for (var i = 0; i < availableWifiNetworks.length; i++) {
-					if (availableWifiNetworks[i].ssid) {
-						$(elementData.dropdown).append($('<option value="' + i + '">' + availableWifiNetworks[i].ssid + '</option>'));
+				for (var i = 0; i < wifiParams.availableWifiNetworks.length; i++) {
+					if (wifiParams.availableWifiNetworks[i].ssid) {
+						$(elementData.dropdown).append($('<option value="' + i + '">' + wifiParams.availableWifiNetworks[i].ssid + '</option>'));
 					}
 				}
 			}
@@ -431,6 +432,7 @@
 			device_getConfiguredNetworks(function(err, list) {
 				if (!err) {
 					if (list && list.length > 0) {
+						wifiParams.configuredWifiNetworks = list;
 						clearTimeout(getNetworkListTimeout);
 						clearInterval(getNetworkListInterval);
 
@@ -513,7 +515,7 @@
 	// returns network object based on dropdown selection
 	var getSelectedNetwork = function (elementData) {
 		var index = $(elementData.dropdown).val();
-		return (availableWifiNetworks[index])
+		return (wifiParams.availableWifiNetworks[index])
 	};
 
 	// populate network info fields (ssid, password, encryption type)
@@ -594,107 +596,6 @@
 			view_setVisibleWifiElements('networkList');
 	});
 
-	// $('#skipStepTestButton').click(function(){
-			// console.log("skipWifiButton gets called");
-			// console.log("nextStep in skip TestButton is nextStep",nextStep);
-			// console.log(preStep);
-			// gotoStep(nextStep);
-
-	// });
-
-	// old code
-	// //Changes the network by disabling the current network, followed by enabling the selected network, and refreshing the network list
-	// var changeNetwork = function (index, currentIndex, deleteConnectedNetwork, refresh) {
-	//
-	// 	sendUbusRequest('uci', 'set', {
-	// 		config: 'wireless',
-	// 		section: savedWifiNetworks[apNetworkIndex][".name"],
-	// 		values: {
-	// 			ApCliEnable: '1',
-	// 			ApCliSsid: savedWifiNetworks[index].ssid,
-	// 			ApCliAuthMode: savedWifiNetworks[index].encryption,
-	// 			ApCliPassWord: savedWifiNetworks[index].key
-	// 		}
-	// 	}, function(response){
-	// 		sendUbusRequest('uci', 'commit', {
-	// 				config: 'wireless'
-	// 		}, function (response){
-	// 			currentNetworkSsid = savedWifiNetworks[index].ssid;
-	// 			sendUbusRequest('file', 'exec', {
-	// 				command: 'wifi',
-	// 				params: []
-	// 			}, function(response){
-	// 				if(deleteConnectedNetwork){
-	// 					deleteNetwork(currentNetworkIndex); //If the currently connected network is to be deleted, delete it and continue
-	// 				}
-	// 				if(refresh){
-	// 					refreshNetworkList(); //Otherwise refresh the network list and continue
-	// 				}
-	// 				currentNetworkIndex = index;
-	// 			});
-	// 		});
-	// 	});
-	// };
-	//
-	// //Removes the network at "index"
-	// var deleteNetwork = function(index) {
-	// 	sendUbusRequest('uci', 'delete', {
-	// 		config: 'wireless',
-	// 		section: savedWifiNetworks[index][".name"]
-	// 	}, function(response){
-	// 		if(response.result[0] === 0){
-	// 			sendUbusRequest('uci', 'commit', {
-	// 					config: 'wireless'
-	// 			}, function(response){
-	// 				refreshNetworkList();
-	// 			});
-	// 		}
-	// 	});
-	// }
-
-	// var refreshNetworkList = function () {
-	// 	savedWifiNetworks = [];
-	// 	$('div').remove('#network-list');
-	// 	$('#networkTable').append(" <div class='list-group-item layout horizontal end' id='network-list'></div> ");
-	// 	sendUbusRequest('uci','get',{config:"wireless"},function(response){
-	// 		$.each( response.result[1].values, function( key, value ) {
-	// 			savedWifiNetworks.push(value);
-	// 		});
-	// 		$.each(savedWifiNetworks, function(key, value) {
-	// 			if(value.type === 'ralink')
-	// 				return;
-	// 			if(value.mode === "ap") {
-	// 				apNetworkIndex = value['.index'];
-	// 				currentNetworkSsid = value.ApCliSsid;
-	// 				$('#network-list').append(" <div class='list-group-item layout horizontal end'><span id='connectedNetwork'class='glyphicons glyphicons-wifi'></span><span>"+ value.ApCliSsid +"</span><div id='" + value['.index'] + "'><a class='glyphicons glyphicons-remove' href='#' data-toggle='tooltip' title='Delete Network'></a></div></div>");
-	// 				if (($('#network-list > div').length) <= 1) {
-	// 					$('.glyphicons-remove').hide();
-	// 				} else {
-	// 					$('.glyphicons-remove').show();
-	// 				}
-	// 				return;
-	// 			}
-	// 			else {
-	// 				if (value.ssid === currentNetworkSsid) {
-	// 					currentNetworkIndex = Number(value['.index']);
-	// 					return;
-	// 				}else{
-	// 					$('#network-list').append(" <div class='list-group-item layout horizontal end'><span class='glyphicons glyphicons-wifi'></span><span>"+ value.ssid +"</span><div id='" + value['.index'] + "'><a class='glyphicons glyphicons-remove' href='#' data-toggle='tooltip' title='Delete Network'></a><a class='glyphicons glyphicons-ok' href='#' data-toggle='tooltip' title='Enable Network'></a></div></div> ");
-	// 					if (($('#network-list > div').length) <= 1) {
-	// 						$('.glyphicons-remove').hide();
-	// 					} else {
-	// 						$('.glyphicons-remove').show();
-	// 					}
-	// 					return;
-	// 				}
-	// 			}
-	//
-	// 		});
-	// 	});
-	// 	$('#wifi-list').show();
-	// 	$('#wifiLoading').hide();
-	// }
-
 	//On click function for the enable network icon (checkmark)
 	$('#networkTable').on('click', '.glyphicons-ok', function() {
 		view_setVisibleWifiElements('loading');
@@ -709,9 +610,6 @@
 				view_setVisibleWifiElements('networkList');
 			}
 		});
-
-		// old code
-		// changeNetwork(index, currentNetworkIndex, false, true); //Enable the selected network and update the network list
 	});
 
 
@@ -729,13 +627,6 @@
 				view_setVisibleWifiElements('networkList');
 			}
 		});
-
-		// old code
-		// if(index === currentNetworkIndex && savedWifiNetworks[index+1]){ //In the case that the deleted network is currently connected and another network is currently configured
-		// 	changeNetwork(index+1, currentNetworkIndex, true, true); // Connect to the next network and flag the current network for deletion
-		// } else {
-		// 	deleteNetwork(index);
-		// }
 	});
 
 
@@ -1100,6 +991,7 @@
 					if (!err && list && list.length > 0) {
 						// there are existing configured networks, show the network list
 						// console.log('configured networks: ', list);
+						wifiParams.configuredWifiNetworks = list;
 						populateNetworkList(list);
 						view_setVisibleWifiElements('networkList');
 					} else {
