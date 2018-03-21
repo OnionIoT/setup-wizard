@@ -240,30 +240,56 @@
 	};
 
 	// use wifi-setup to move a network to the highest priority
-	// var device_setNetworkHighestPriority = function (ssid, callback) {
-	// 	// TODO: encode to base64 and enable the option
-	// 	sendUbusRequest('onion', 'wifi-setup', {
-	// 		command: 'priority',
-	// 		base64: false,
-	// 		params: {
-	// 			ssid: ssid,
-	// 			move: top
-	// 		}
-	// 	}, function (resp) {
-	// 		if (resp.result && typeof(resp.result[0]) !== 'undefined' && resp.result[0] === 0) {
-	// 			if (resp.result[1].success) {
-	// 				console.log('Successfully added wireless network');
-	// 				callback(null, null);
-	// 			} else {
-	// 				console.log('Unable to add wireless network.');
-	// 				callback(true, 'Unable to add wireless network');
-	// 			}
-	// 		} else {
-	// 			console.log('Sending request to add wireless network failed');
-	// 			callback(true, 'Sending request to add wireless network failed');
-	// 		}
-	// 	});
-	// };
+	var device_setNetworkHighestPriority = function (ssid, callback) {
+		console.log('giving highest priority to network ' + ssid);
+		// TODO: encode to base64 and enable the option
+		sendUbusRequest('onion', 'wifi-setup', {
+			command: 'priority',
+			base64: false,
+			params: {
+				ssid: ssid,
+				move: 'top'
+			}
+		}, function (resp) {
+			if (resp.result && typeof(resp.result[0]) !== 'undefined' && resp.result[0] === 0) {
+				if (resp.result[1].success) {
+					console.log('Successfully updated network priority');
+					callback(null, null);
+				} else {
+					console.log('Unable to change network priority.');
+					callback(true, 'Unable to change network priority.');
+				}
+			} else {
+				console.log('Sending request to change wireless network priority failed');
+				callback(true, 'Sending request to change wireless network priority failed');
+			}
+		});
+	};
+
+	// use wifi-setup to remove a network configuration
+	var device_deleteNetwork = function (ssid, callback) {
+		// TODO: encode to base64 and enable the option
+		sendUbusRequest('onion', 'wifi-setup', {
+			command: 'remove',
+			base64: false,
+			params: {
+				ssid: ssid
+			}
+		}, function (resp) {
+			if (resp.result && typeof(resp.result[0]) !== 'undefined' && resp.result[0] === 0) {
+				if (resp.result[1].success) {
+					console.log('Successfully removed network');
+					callback(null, null);
+				} else {
+					console.log('Unable to remove network.');
+					callback(true, 'Unable to remove network.');
+				}
+			} else {
+				console.log('Sending request to remove wireless network configuration failed');
+				callback(true, 'Sending request to remove wireless network configuration failed');
+			}
+		});
+	};
 	///////////////////////////////////
 
 	/* logic and device interaction functions */
@@ -376,6 +402,54 @@
 		});
 	};
 
+	var enableSelectedNetwork = function (ssid, callback) {
+		device_setNetworkHighestPriority(ssid, function (err, msg) {
+			if (err) {
+				console.error(msg);
+			}
+			refreshNetworkList(function (refreshErr, data) {
+				callback(refreshErr, data);
+			});
+		});
+	};
+
+	var removeSelectedNetwork = function (ssid, callback) {
+		device_deleteNetwork(ssid, function (err, msg) {
+			if (err) {
+				console.error(msg);
+			}
+			refreshNetworkList(function (refreshErr, data) {
+				callback(refreshErr, data);
+			});
+		});
+	};
+
+	// retrieve network list from the device, retrying every 3 seconds, with a 30second timeout
+	var refreshNetworkList = function (callback) {
+		// attempt to retrieve the network list from the device at an interval
+		var getNetworkListInterval = setInterval(function () {
+			device_getConfiguredNetworks(function(err, list) {
+				if (!err) {
+					if (list && list.length > 0) {
+						clearTimeout(getNetworkListTimeout);
+						clearInterval(getNetworkListInterval);
+
+						callback(null, list);
+					}
+					// TODO: maybe add a handler here if the list is empty??
+				}
+			});
+		}, 3000);
+
+		var getNetworkListTimeout = setTimeout(function () {
+			console.error('Grabbing updated configured network list timed out');
+			clearInterval(getNetworkListInterval);
+
+			callback(true, 'Retrieving network list from device timed out. Please refresh the page and try again');
+		}, 30000);
+
+	};
+
 	/* view manipulation functions */
 	//Used to display error messages in an alert box
 	var showWifiMessage = function (elementData, type, message) {
@@ -454,6 +528,33 @@
 		populateNetworkInfo(elementData, '', '', 'None');
 	};
 
+	// populates the network list to show network configurations (with icons, etc)
+	var populateNetworkList = function (networkList) {
+		if (networkList && Array.isArray(networkList)) {
+			$('div').remove('#network-list');
+			$('#networkTable').append(" <div class='list-group-item layout horizontal end' id='network-list'></div> ");
+			$.each(networkList, function(key, value) {
+				var id = '';
+				var enableButton = "<a class='glyphicons glyphicons-ok' href='#' data-toggle='tooltip' title='Enable Network'></a>";
+				if (value.enabled) {
+					id = 'id=\'connectedNetwork\'';
+					enableButton = '';
+				}
+				var html = `<div class='list-group-item layout horizontal end'><span ${id} class='glyphicons glyphicons-wifi'></span><span>${value.ssid}</span><div id='${value.ssid}'><a class='glyphicons glyphicons-remove' href='#' data-toggle='tooltip' title='Delete Network'></a>${enableButton}</div></div>`;
+				// console.log('adding to network list:');
+				// console.log(html);
+				$('#network-list').append(html);
+
+				if (($('#network-list > div').length) <= 1) {
+					$('.glyphicons-remove').hide();
+				} else {
+					$('.glyphicons-remove').show();
+				}
+				return;
+			});
+		}
+	};
+
  	/* event handling functions */
 	//On click functions for the scan button
 	$('#wifi-scan-btn').click(function () {
@@ -501,132 +602,113 @@
 
 	// });
 
-	//Changes the network by disabling the current network, followed by enabling the selected network, and refreshing the network list
-	var changeNetwork = function (index, currentIndex, deleteConnectedNetwork, refresh) {
+	// old code
+	// //Changes the network by disabling the current network, followed by enabling the selected network, and refreshing the network list
+	// var changeNetwork = function (index, currentIndex, deleteConnectedNetwork, refresh) {
+	//
+	// 	sendUbusRequest('uci', 'set', {
+	// 		config: 'wireless',
+	// 		section: savedWifiNetworks[apNetworkIndex][".name"],
+	// 		values: {
+	// 			ApCliEnable: '1',
+	// 			ApCliSsid: savedWifiNetworks[index].ssid,
+	// 			ApCliAuthMode: savedWifiNetworks[index].encryption,
+	// 			ApCliPassWord: savedWifiNetworks[index].key
+	// 		}
+	// 	}, function(response){
+	// 		sendUbusRequest('uci', 'commit', {
+	// 				config: 'wireless'
+	// 		}, function (response){
+	// 			currentNetworkSsid = savedWifiNetworks[index].ssid;
+	// 			sendUbusRequest('file', 'exec', {
+	// 				command: 'wifi',
+	// 				params: []
+	// 			}, function(response){
+	// 				if(deleteConnectedNetwork){
+	// 					deleteNetwork(currentNetworkIndex); //If the currently connected network is to be deleted, delete it and continue
+	// 				}
+	// 				if(refresh){
+	// 					refreshNetworkList(); //Otherwise refresh the network list and continue
+	// 				}
+	// 				currentNetworkIndex = index;
+	// 			});
+	// 		});
+	// 	});
+	// };
+	//
+	// //Removes the network at "index"
+	// var deleteNetwork = function(index) {
+	// 	sendUbusRequest('uci', 'delete', {
+	// 		config: 'wireless',
+	// 		section: savedWifiNetworks[index][".name"]
+	// 	}, function(response){
+	// 		if(response.result[0] === 0){
+	// 			sendUbusRequest('uci', 'commit', {
+	// 					config: 'wireless'
+	// 			}, function(response){
+	// 				refreshNetworkList();
+	// 			});
+	// 		}
+	// 	});
+	// }
 
-		sendUbusRequest('uci', 'set', {
-			config: 'wireless',
-			section: savedWifiNetworks[apNetworkIndex][".name"],
-			values: {
-				ApCliEnable: '1',
-				ApCliSsid: savedWifiNetworks[index].ssid,
-				ApCliAuthMode: savedWifiNetworks[index].encryption,
-				ApCliPassWord: savedWifiNetworks[index].key
-			}
-		}, function(response){
-			sendUbusRequest('uci', 'commit', {
-					config: 'wireless'
-			}, function (response){
-				currentNetworkSsid = savedWifiNetworks[index].ssid;
-				sendUbusRequest('file', 'exec', {
-					command: 'wifi',
-					params: []
-				}, function(response){
-					if(deleteConnectedNetwork){
-						deleteNetwork(currentNetworkIndex); //If the currently connected network is to be deleted, delete it and continue
-					}
-					if(refresh){
-						refreshNetworkList(); //Otherwise refresh the network list and continue
-					}
-					currentNetworkIndex = index;
-				});
-			});
-		});
-	};
-
-	//Removes the network at "index"
-	var deleteNetwork = function(index) {
-		sendUbusRequest('uci', 'delete', {
-			config: 'wireless',
-			section: savedWifiNetworks[index][".name"]
-		}, function(response){
-			if(response.result[0] === 0){
-				sendUbusRequest('uci', 'commit', {
-						config: 'wireless'
-				}, function(response){
-					refreshNetworkList();
-				});
-			}
-		});
-	}
-
-	//Refreshes the network list to show most recent network configurations (icons, etc)
-	var populateNetworkList = function (networkList) {
-		if (networkList && Array.isArray(networkList)) {
-			$('div').remove('#network-list');
-			$('#networkTable').append(" <div class='list-group-item layout horizontal end' id='network-list'></div> ");
-			$.each(networkList, function(key, value) {
-				var id = '';
-				var enableButton = "<a class='glyphicons glyphicons-ok' href='#' data-toggle='tooltip' title='Enable Network'></a>";
-				if (value.enabled) {
-					id = 'id=\'connectedNetwork\'';
-					enableButton = '';
-				}
-				var html = `<div class='list-group-item layout horizontal end'><span ${id} class='glyphicons glyphicons-wifi'></span><span>${value.ssid}</span><div id='${value.ssid}'><a class='glyphicons glyphicons-remove' href='#' data-toggle='tooltip' title='Delete Network'></a>${enableButton}</div></div>`;
-				console.log('adding to network list:');
-				console.log(html);
-				$('#network-list').append(html);
-
-				if (($('#network-list > div').length) <= 1) {
-					$('.glyphicons-remove').hide();
-				} else {
-					$('.glyphicons-remove').show();
-				}
-				return;
-			});
-		}
-	}
-
-	var refreshNetworkList = function () {
-		savedWifiNetworks = [];
-		$('div').remove('#network-list');
-		$('#networkTable').append(" <div class='list-group-item layout horizontal end' id='network-list'></div> ");
-		sendUbusRequest('uci','get',{config:"wireless"},function(response){
-			$.each( response.result[1].values, function( key, value ) {
-				savedWifiNetworks.push(value);
-			});
-			$.each(savedWifiNetworks, function(key, value) {
-				if(value.type === 'ralink')
-					return;
-				if(value.mode === "ap") {
-					apNetworkIndex = value['.index'];
-					currentNetworkSsid = value.ApCliSsid;
-					$('#network-list').append(" <div class='list-group-item layout horizontal end'><span id='connectedNetwork'class='glyphicons glyphicons-wifi'></span><span>"+ value.ApCliSsid +"</span><div id='" + value['.index'] + "'><a class='glyphicons glyphicons-remove' href='#' data-toggle='tooltip' title='Delete Network'></a></div></div>");
-					if (($('#network-list > div').length) <= 1) {
-						$('.glyphicons-remove').hide();
-					} else {
-						$('.glyphicons-remove').show();
-					}
-					return;
-				}
-				else {
-					if (value.ssid === currentNetworkSsid) {
-						currentNetworkIndex = Number(value['.index']);
-						return;
-					}else{
-						$('#network-list').append(" <div class='list-group-item layout horizontal end'><span class='glyphicons glyphicons-wifi'></span><span>"+ value.ssid +"</span><div id='" + value['.index'] + "'><a class='glyphicons glyphicons-remove' href='#' data-toggle='tooltip' title='Delete Network'></a><a class='glyphicons glyphicons-ok' href='#' data-toggle='tooltip' title='Enable Network'></a></div></div> ");
-						if (($('#network-list > div').length) <= 1) {
-							$('.glyphicons-remove').hide();
-						} else {
-							$('.glyphicons-remove').show();
-						}
-						return;
-					}
-				}
-
-			});
-		});
-		$('#wifi-list').show();
-		$('#wifiLoading').hide();
-	}
+	// var refreshNetworkList = function () {
+	// 	savedWifiNetworks = [];
+	// 	$('div').remove('#network-list');
+	// 	$('#networkTable').append(" <div class='list-group-item layout horizontal end' id='network-list'></div> ");
+	// 	sendUbusRequest('uci','get',{config:"wireless"},function(response){
+	// 		$.each( response.result[1].values, function( key, value ) {
+	// 			savedWifiNetworks.push(value);
+	// 		});
+	// 		$.each(savedWifiNetworks, function(key, value) {
+	// 			if(value.type === 'ralink')
+	// 				return;
+	// 			if(value.mode === "ap") {
+	// 				apNetworkIndex = value['.index'];
+	// 				currentNetworkSsid = value.ApCliSsid;
+	// 				$('#network-list').append(" <div class='list-group-item layout horizontal end'><span id='connectedNetwork'class='glyphicons glyphicons-wifi'></span><span>"+ value.ApCliSsid +"</span><div id='" + value['.index'] + "'><a class='glyphicons glyphicons-remove' href='#' data-toggle='tooltip' title='Delete Network'></a></div></div>");
+	// 				if (($('#network-list > div').length) <= 1) {
+	// 					$('.glyphicons-remove').hide();
+	// 				} else {
+	// 					$('.glyphicons-remove').show();
+	// 				}
+	// 				return;
+	// 			}
+	// 			else {
+	// 				if (value.ssid === currentNetworkSsid) {
+	// 					currentNetworkIndex = Number(value['.index']);
+	// 					return;
+	// 				}else{
+	// 					$('#network-list').append(" <div class='list-group-item layout horizontal end'><span class='glyphicons glyphicons-wifi'></span><span>"+ value.ssid +"</span><div id='" + value['.index'] + "'><a class='glyphicons glyphicons-remove' href='#' data-toggle='tooltip' title='Delete Network'></a><a class='glyphicons glyphicons-ok' href='#' data-toggle='tooltip' title='Enable Network'></a></div></div> ");
+	// 					if (($('#network-list > div').length) <= 1) {
+	// 						$('.glyphicons-remove').hide();
+	// 					} else {
+	// 						$('.glyphicons-remove').show();
+	// 					}
+	// 					return;
+	// 				}
+	// 			}
+	//
+	// 		});
+	// 	});
+	// 	$('#wifi-list').show();
+	// 	$('#wifiLoading').hide();
+	// }
 
 	//On click function for the enable network icon (checkmark)
 	$('#networkTable').on('click', '.glyphicons-ok', function() {
 		view_setVisibleWifiElements('loading');
-		var selectedSsid = $(this).closest('div').prop('id');
+		var selectedSsid = String($(this).closest('div').prop('id'));
 		console.log('clicked on enable for network ' + selectedSsid);
 
-
+		enableSelectedNetwork(selectedSsid, function (err, data) {
+			if (err) {
+				// TODO: come up with a handler here
+			} else {
+				populateNetworkList(data);
+				view_setVisibleWifiElements('networkList');
+			}
+		});
 
 		// old code
 		// changeNetwork(index, currentNetworkIndex, false, true); //Enable the selected network and update the network list
@@ -636,8 +718,17 @@
 	// On click function for the remove network icon (X)
 	$('#networkTable').on('click', '.glyphicons-remove', function() {
 		view_setVisibleWifiElements('loading');
-		var selectedSsid = $(this).closest('div').prop('id');
+		var selectedSsid = String($(this).closest('div').prop('id'));
 		console.log('clicked on delete for index ' + selectedSsid);
+
+		removeSelectedNetwork(selectedSsid, function (err, data) {
+			if (err) {
+				// TODO: come up with a handler here
+			} else {
+				populateNetworkList(data);
+				view_setVisibleWifiElements('networkList');
+			}
+		});
 
 		// old code
 		// if(index === currentNetworkIndex && savedWifiNetworks[index+1]){ //In the case that the deleted network is currently connected and another network is currently configured
@@ -1008,7 +1099,7 @@
 				device_getConfiguredNetworks(function(err, list) {
 					if (!err && list && list.length > 0) {
 						// there are existing configured networks, show the network list
-						console.log('configured networks: ', list);
+						// console.log('configured networks: ', list);
 						populateNetworkList(list);
 						view_setVisibleWifiElements('networkList');
 					} else {
