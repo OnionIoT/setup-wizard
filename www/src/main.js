@@ -156,7 +156,8 @@
 	};
 	var wifiButtonContent = {
 		default: 'Configure WiFi',
-		configuring: 'Configuring<div id="wifi-loading" class="wifiLoad" style="display: block;">'
+		configuring: 'Configuring<div id="wifi-loading" class="wifiLoad" style="display: block;"></div>',
+		waiting: 'Configuring<div id="wifi-loading" class="wifiLoad" style="display: block;"></div><div>Waiting for Omega to connect to network</div>'
 	}
 
 	///////////////////////////////////
@@ -370,8 +371,10 @@
 					if (err) {
 						// there was an error trying to use ubus to set wireless network
 						console.error('Error adding wireless network');
+						wifiSubmitButtonEnable(elementData, wifiButtonContent.default);
 						showWifiMessage(elementData, 'warning', 'Something went wrong communicating with the device, please try again');
 					} else {
+						wifiSubmitButtonDisable(elementData, wifiButtonContent.waiting);
 						// wireless network set, check to see if the device is online
 						console.log('addWirelessNetwork was successful, checking for connectivity');
 						var connectionCheckInterval = setInterval(function () {
@@ -381,6 +384,7 @@
 									clearInterval(connectionCheckInterval);
 									console.log('Successfully connected!');
 
+									// TODO: maybe here we should show the network list? or maybe we should be checking that the network list was updated first?
 									// advance to the next step
 									gotoStep(nextStep);
 								}
@@ -1000,71 +1004,6 @@
 						view_setVisibleWifiElements('addNetwork');
 					}
 				})
-				// LAZAR: TODO: this is a fucking disaster
-				//	redo this so it uses the global checkonline function
-				// sendUbusRequest('file', 'exec', {
-				// 	command: 'wget',
-				// 	params: ['--spider', 'http://repo.onion.io/omega2/']
-				// }, function (data){
-				// 	if (data.result.length === 2 && data.result[1].code === 0) {
-				// 		omegaOnline = true;
-				//
-				// 		refreshNetworkList();
-				// 		// $('#wifi-connect').hide();
-				// 		// $('#wifiLoading').hide();
-				// 		// $('#wifi-list').show();
-				// 		// $('#networkTable').show();
-				// 		console.log('Already connected to the internet!')
-				// 		sendUbusRequest('onion', 'oupgrade', {
-				// 			params: {
-				// 				check: ''
-				// 			}
-				// 		}, function (data) {
-				// 			binName = data.result[1].image.local;
-				// 			upgradeRequired = data.result[1].upgrade;
-				// 			fileSize = data.result[1].image.size;
-				// 			$('#download-progress').prop('max', data.result[1].image.size);
-				// 			$('#wifi-connect').hide();
-				// 			$('#wifiLoading').hide();
-				// 			$('#wifi-list').show();
-				// 			$('#networkTable').show();
-				// 		});
-				// 	} else {
-				// 		sendUbusRequest('file', 'exec', {
-				// 			command: 'wget',
-				// 			params: ['--spider', 'http://repo.onion.io/omega2/']
-				// 		}, function (data){
-				// 			if (data.result.length === 2 && data.result[1].code === 0) {
-				// 				omegaOnline = true;
-				//
-				// 				refreshNetworkList();
-				// 				// $('#wifi-connect').hide();
-				// 				// $('#wifiLoading').hide();
-				// 				// $('#wifi-list').show();
-				// 				// $('#networkTable').show();
-				// 				console.log('Already connected to the internet!')
-				// 				// sendUbusRequest('onion', 'oupgrade', {
-				// 				// 	params: {
-				// 				// 		check: ''
-				// 				// 	}
-				// 				// }, function (data) {
-				// 				// 	binName = data.result[1].image.local;
-				// 				// 	upgradeRequired = data.result[1].upgrade;
-				// 				// 	fileSize = data.result[1].image.size;
-				// 				// 	$('#download-progress').prop('max', data.result[1].image.size);
-				// 				// 	$('#wifi-connect').hide();
-				// 				// 	$('#wifiLoading').hide();
-				// 				// 	$('#wifi-list').show();
-				// 				// 	$('#networkTable').show();
-				// 				// });
-				// 			} else {
-				// 				$('#wifiLoading').hide();
-				// 				$('#networkTable').hide();
-				// 				$('#wifi-connect').show();
-				// 			}
-				// 		});
-				// 	}
-				// });
 
 				//Check to see if you can skip here
 				sendUbusRequest('uci','get',{config:"onion",section:"console",option:"setup"},function(response){
