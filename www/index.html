@@ -253,7 +253,7 @@
 
 							<!-- Modal -->
 							<div id="myModal" class="modal fade" tabindex="-1" role="dialog" style="width:100%;height:100%;overflow:hidden;">
-							  <div class="modal-dialog" style="width:100%;height:100%;"">
+							  <div class="modal-dialog" style="width:100%;height:100%;">
 
 								<!-- Modal content-->
 								<div class="modal-content" style="width:100%;height:100%;">
@@ -287,22 +287,25 @@
 		        	<!-- Step 4: Software Updates -->
 					<div class="card card-block main stepClass" style="margin-top:40px;">
 						<!-- <h3 class="m-b-md">Firmware Update</h3> -->
-						<div id="firmwareText" class="alert alert-warning"></div>
-						<div style="text-align:center; margin-left:-50px;" class="checkbox">
-							<label>Install Console<input type="checkbox" name="console" id="consoleInstall" value="Console" style="margin-left:5px;" checked><br>
-							</label>
-						</div>
-						<div id="consoleText" class="alert alert-warning"></div>
-						<div class="form-group row">
-							<button id="upgradeFirmwareButton" type="button" class="btn btn-info btn-block">Upgrade Firmware</button>
-						</div>
-						<div id="firwareButtonContainer" class="row">
-							<div class="col-sm-6">
-								<button id="firmwareBackButton" type="button" class = "btn btn-secondary btn-block moveLeft">Back</button>
+						<div id="softwareLoading" class="loading"></div>
+						<div id="software-content">
+							<div id="firmwareText" class="alert alert-warning"></div>
+							<div style="text-align:center; margin-left:-50px;" class="checkbox">
+								<label>Install Console<input type="checkbox" name="console" id="consoleInstall" value="Console" style="margin-left:5px;" checked><br>
+								</label>
 							</div>
-							<!-- <div class="col-sm-6"> -->
-								<!-- <button id="skipFirmwareStep" type="button" class="btn btn-success btn-block">Skip Step</button> -->
-							<!-- </div> -->
+							<div id="consoleText" class="alert alert-warning"></div>
+							<div class="form-group row">
+								<button id="upgradeFirmwareButton" type="button" class="btn btn-info btn-block">Upgrade Firmware</button>
+							</div>
+							<div id="firwareButtonContainer" class="row">
+								<div class="col-sm-6">
+									<button id="firmwareBackButton" type="button" class = "btn btn-secondary btn-block moveLeft">Back</button>
+								</div>
+								<!-- <div class="col-sm-6"> -->
+									<!-- <button id="skipFirmwareStep" type="button" class="btn btn-success btn-block">Skip Step</button> -->
+								<!-- </div> -->
+							</div>
 						</div>
 					</div>
 
