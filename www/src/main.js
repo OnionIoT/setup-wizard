@@ -155,36 +155,66 @@
 		configuring: 'Configuring<div id="wifi-loading" class="wifiLoad" style="display: block;">'
 	}
 
-	//Used to display error messages in an alert box
-	var showWifiMessage = function (elementData, type, message) {
-		$(elementData.messageField).append($('<div class="alert alert-' + type + ' alert-dismissible fade in" role="alert"> \
-			<button type="button" class="close" data-dismiss="alert" aria-label="Close"> \
-				<span aria-hidden="true">&times;</span> \
-				<span class="sr-only">Close</span> \
-			</button> \
-			' + message + ' \
-		</div>'));
+	///////////////////////////////////
+	/* wifi related device functions */
+
+	// check if device is online
+	var device_checkOnline = function(callback) {
+		console.log('checking if online...');
+		sendUbusRequest('file', 'exec', {
+			command: 'wget',
+			// params: ['--spider', 'http://repo.onion.io/omega2']
+			params: ['--spider', 'http://repo.onion.io/']
+		}, function (data){
+			if (data.result &&
+				typeof (data.result[1]) !== 'undefined' &&
+				typeof (data.result[1].code) !== 'undefined' &&
+				data.result[1].code === 0
+			) {
+				callback(true);
+			} else {
+				callback(false);
+			}
+		});
+
 	};
 
-	var clearWifiMessage = function (elementData) {
-		$(elementData.messageField +' > .alert').alert('close');
+	// retrieve list of configured networks from device
+	device_getConfiguredNetworks = function (callback) {
+		console.log('checking for configured networks');
+		sendUbusRequest('onion', 'wifi-setup', {
+			command: 'list',
+			params: {}
+		}, function (resp) {
+			if (resp.result && typeof(resp.result[0]) !== 'undefined' && resp.result[0] === 0) {
+				callback(null, resp.result[1].results);
+			} else {
+				callback(true, 'Could not fetch configured network list from the device');
+			}
+		});
+	};
+
+	// perform scan for available Networks
+	var device_scanWifi = function (callback) {
+		sendUbusRequest('onion', 'wifi-scan', {
+			device: 'ra0'
+		}, function (data) {
+			if (data && data.error) {
+				callback(true, 'No Wi-Fi networks found');
+			} else if (data && data.result) {
+				var returnCode = data.result[0];
+				if (returnCode === 0 && data.result[1].results.length !== 0) {
+					callback(null, data.result[1].results);
+				} else {
+					callback(true, 'No Wi-Fi networks found');
+				}
+			}
+		});
 	}
 
-	// old code
-	/*//Used to display error messages in an alert box
-	var showWifiMessageModal = function (type, message) {
-		$('#wifi-message-modal').append($('<div class="alert alert-' + type + ' alert-dismissible fade in" role="alert"> \
-			<button type="button" class="close" data-dismiss="alert" aria-label="Close"> \
-				<span aria-hidden="true">&times;</span> \
-				<span class="sr-only">Close</span> \
-			</button> \
-			' + message + ' \
-		</div>'));
-	};*/
-
 	// use wifi-setup to add a configured wifi network
-	var device_addWirelessNetwork = function (ssid, password, auth, callback) {
-		// new code
+	var device_addWirelessNetwork = function (ssid, auth, password, callback) {
+		// TODO: encode to base64 and enable the option
 		sendUbusRequest('onion', 'wifi-setup', {
 			command: 'add',
 			base64: false,
@@ -209,165 +239,36 @@
 		});
 	};
 
-	//Generates the parameters for the uci set wireless ubus call
-	var genUciNetworkParams = function (ssid, password, auth, bApNetwork, bEnabled) {
-		var params = {};
-		// set the basic info
-		params.ssid 		= ssid;
-		params.encryption 	= auth;
-		// set the network parameters based on if AP or STA type
-		// generate the values to set based on the encryption type
-		if (auth === 'wep') {
-			params.encryption 	= auth;
-			params.key 		= '1';
-			params.key1 	= password;
-		}
-		else if (auth === 'psk') {
-			params.encryption 	= 'WPA1PSK';
-			params.key 		= password;
-		}
-		else if (auth === 'psk2') {
-			params.encryption 	= 'WPA2PSK';
-			params.key 		= password;
-		}
-		else {
-			params.encryption 	= 'NONE';
-			params.key 		= '';
-		}
-
-		return params;
-	};
-
-	//Uses ubus to uci set the wireless with the genUciNetworkParams and enables the configuration
-	// var setWirelessNetwork = function (sectionName, params) {
-			// sendUbusRequest('uci', 'set', {
-				// config: 'wireless',
-				// section: savedWifiNetworks[currentNetworkIndex][".name"],
-				// values: {
-					// disabled = "1"
-				// }
-			// }, function(){
-			// 	sendUbusRequest('uci', 'set', {
-			// 		config: 'wireless',
-			// 		section: sectionName,
-			// 		values: params
-			// 	}, function (result) {
-			// 		console.log('uci set wireless result:', result);
-			// 		if (result.result[0] === 0) {
-			// 			sendUbusRequest('uci', 'commit', {
-			// 					config: 'wireless'
-			// 			}, function (result) {
-			// 				if (result.result[0] === 0) {
-			// 					console.log('Wireless set');
-			// 					sendUbusRequest('file', 'exec', {
-			// 					command: 'wifimanager',
-			// 					params: []
-			// 				})
-							// } else {
-								// console.log('Unable to edit wireless network settings.');
-							// }
-						// });
-					// } else {
-						// console.log('Unable to edit wireless network settings.');
-					// }
-				// });
-			// });
+	// use wifi-setup to move a network to the highest priority
+	// var device_setNetworkHighestPriority = function (ssid, callback) {
+	// 	// TODO: encode to base64 and enable the option
+	// 	sendUbusRequest('onion', 'wifi-setup', {
+	// 		command: 'priority',
+	// 		base64: false,
+	// 		params: {
+	// 			ssid: ssid,
+	// 			move: top
+	// 		}
+	// 	}, function (resp) {
+	// 		if (resp.result && typeof(resp.result[0]) !== 'undefined' && resp.result[0] === 0) {
+	// 			if (resp.result[1].success) {
+	// 				console.log('Successfully added wireless network');
+	// 				callback(null, null);
+	// 			} else {
+	// 				console.log('Unable to add wireless network.');
+	// 				callback(true, 'Unable to add wireless network');
+	// 			}
+	// 		} else {
+	// 			console.log('Sending request to add wireless network failed');
+	// 			callback(true, 'Sending request to add wireless network failed');
+	// 		}
+	// 	});
 	// };
+	///////////////////////////////////
 
-	//Function to generate params and set wireless config
-	// LAZAR: is this function deprecated??
-	var setupWifiNetwork = function (ssid, password, auth, uciId) {
-		// if (uciId == null) {
-		// 	var uciId 			= -1;
-		// }
-		// var wifiSectionName = '@wifi-iface[' + uciId + ']'
-
-		// setup the wifi-iface
-		//var params 			= genUciNetworkParams(ssid, password, auth, false);
-		//var wirelessPromise	= addWirelessNetwork(params, true);
-		var wirelessPromise	= device_addWirelessNetwork(ssid, password, auth, true);
-	};
-
-	// Check to see if the Omega is online!!
-	var checkOnlineRequest;
-	// LAZAR: TODO: this funciton is deprecated
-	var isOnline = function (callback) {
-		console.log('checking if online...');
-		sendUbusRequest('file', 'exec', {
-			command: 'wget',
-			params: ['--spider', 'http://repo.onion.io/omega2/images']
-		}, function (data){
-			// console.log('isOnline returned: ', data.result);
-			if (data.result &&
-				typeof (data.result[1]) !== 'undefined' &&
-				typeof (data.result[1].code) !== 'undefined' &&
-				data.result[1].code === 0
-			) {
-				callback(true);
-			} else {
-				callback(false);
-			}
-		});
-
-	};
-
-	// check if device is online
-	var device_checkOnline = function(callback) {
-		console.log('checking if online...');
-		sendUbusRequest('file', 'exec', {
-			command: 'wget',
-			// params: ['--spider', 'http://repo.onion.io/omega2']
-			params: ['--spider', 'http://repo.onion.io/']
-		}, function (data){
-			// console.log('isOnline returned: ', data.result);
-			if (data.result &&
-				typeof (data.result[1]) !== 'undefined' &&
-				typeof (data.result[1].code) !== 'undefined' &&
-				data.result[1].code === 0
-			) {
-				callback(true);
-			} else {
-				callback(false);
-			}
-		});
-
-	};
-
-	//Displays the list of networks in the dropdown after a scan
-	var showScanMessage = function (element, message) {
-		// old code
-		// $('#wifi-select').empty();
-		// $('#wifi-select').append($('<option value="" disabled selected>' + message + '</option>'));
-		$(element).empty();
-		$(element).append($('<option value="" disabled selected>' + message + '</option>'));
-
-	};
-
-	// old code
-	// var showScanMessageModal = function (message) {
-	// 	$('#wifi-select-modal').empty();
-	// 	$('#wifi-select-modal').append($('<option value="" disabled selected>' + message + '</option>'));
-	// };
-
-	// perform scan for available Networks
-	var device_scanWifi = function (callback) {
-		sendUbusRequest('onion', 'wifi-scan', {
-			device: 'ra0'
-		}, function (data) {
-			if (data && data.error) {
-				callback(true, 'No Wi-Fi networks found');
-			} else if (data && data.result) {
-				var returnCode = data.result[0];
-				if (returnCode === 0 && data.result[1].results.length !== 0) {
-					callback(null, data.result[1].results);
-				} else {
-					callback(true, 'No Wi-Fi networks found');
-				}
-			}
-		});
-	}
-
+	/* logic and device interaction functions */
 	// scan for wifi networks and populate the dropdown (REGULAR)
+	// TODO: separate this by MVC
 	var scanWifiNetwork = function (elementData) {
 		showScanMessage(elementData.dropdown, 'Scanning...');
 
@@ -396,111 +297,7 @@
 				}
 			}
 		});
-
-		// old code
-		/*sendUbusRequest('onion', 'wifi-scan', {
-			device: 'ra0'
-		}, function (data) {
-			$('#wifi-scan-icon').removeClass('rotate');
-			$('#wifi-scan-btn').prop('disabled', false);
-
-			if (data && data.error) {
-				showScanMessage('No Wi-Fi networks found');
-
-			} else if (data && data.result) {
-				var returnCode = data.result[0];
-
-				if (returnCode === 0 && data.result[1].results.length !== 0) {
-					availableWifiNetworks = data.result[1].results;
-
-					showScanMessage('Choose Wi-Fi Network:');
-
-					for (var i = 0; i < availableWifiNetworks.length; i++) {
-						if (availableWifiNetworks[i].ssid) {
-							$('#wifi-select').append($('<option value="' + i + '">' + availableWifiNetworks[i].ssid + '</option>'));
-						}
-					}
-				} else {
-					showScanMessage('No Wi-Fi network found');
-				}
-			}
-		});*/
 	};
-
-	// old code
-	// scan for wifi networks and populate the dropdown (MODAL)
-	// TODO: Clean up into one function that takes in parameter (id)
-	/*var scanWifiNetworkModal = function () {
-		showScanMessageModal('Scanning...');
-		$('#wifi-scan-btn-modal').prop('disabled', true);
-		$('#wifi-scan-icon-modal').addClass('rotate');
-
-		sendUbusRequest('onion', 'wifi-scan', {
-			device: 'ra0'
-		}, function (data) {
-			$('#wifi-scan-icon-modal').removeClass('rotate');
-			$('#wifi-scan-btn-modal').prop('disabled', false);
-
-			if (data && data.error) {
-				showScanMessageModal('No Wi-Fi network found');
-
-			} else if (data && data.result) {
-				var returnCode = data.result[0];
-
-				if (returnCode === 0 && data.result[1].results.length !== 0) {
-					availableWifiNetworks = data.result[1].results;
-
-					showScanMessageModal('Choose Wi-Fi Network:');
-
-					for (var i = 0; i < availableWifiNetworks.length; i++) {
-						if (availableWifiNetworks[i].ssid) {
-							$('#wifi-select-modal').append($('<option value="' + i + '">' + availableWifiNetworks[i].ssid + '</option>'));
-						}
-					}
-				} else {
-					showScanMessageModal('No Wi-Fi network found');
-				}
-			}
-		});
-	};*/
-
-	//On click functions for the scan button
-	$('#wifi-scan-btn').click(function () {
-		scanWifiNetwork(regularWifiScanElements);
-	});
-	$('#wifi-scan-btn-modal').click(function () {
-		scanWifiNetwork(modalWifiScanElements);
-	});
-
-	// returns network object based on dropdown selection
-	var getSelectedNetwork = function (elementData) {
-		var index = $(elementData.dropdown).val();
-		return (availableWifiNetworks[index])
-	};
-
-	// populate network info fields (ssid, password, encryption type)
-	var populateNetworkInfo = function (elementData, ssid, password, encr) {
-		$(elementData.ssidField).val(ssid);
-		$(elementData.passwordField).val('');
-		$(elementData.encryptionField).val(encr);
-	};
-
-	// clear input fields
-	var clearFields = function (elementData) {
-		populateNetworkInfo(elementData, '', '', 'None');
-	};
-
-	//Reads the information of the selected network from the dropdown and displays it in fields for the user
-	$('#wifi-select').change(function () {
-		var networkData = getSelectedNetwork(regularWifiScanElements);
-		populateNetworkInfo(regularWifiScanElements, networkData.ssid, '', networkData.encryption);
-	});
-
-	//Reads the information of the selected network from the dropdown and displays it in fields for the user. TODO: Cleanup into one function that takes ID as param modal
-	$('#wifi-select-modal').change(function () {
-		var networkData = getSelectedNetwork(modalWifiScanElements);
-		populateNetworkInfo(modalWifiScanElements);
-	});
 
 	// ensure network input parameters are ok
 	var checkNetworkConfigInput = function (ssid, encr, password, callback) {
@@ -523,23 +320,10 @@
 		}
 	};
 
-	var wifiSubmitButtonDisable = function (elementData, buttonContent) {
-		$(elementData.submitButton).prop('disabled', true);
-		// $('#skipStepTestButton').prop('disabled', true);
-		$(elementData.submitButton).html(buttonContent);
-	};
-
-	var wifiSubmitButtonEnable = function (elementData, buttonContent) {
-		$(elementData.submitButton).html(buttonContent);
-		$(elementData.submitButton).prop('disabled', false);
-		// $('#skipStepTestButton').prop('disabled', false);
-		$('#wifi-loading').css('display','none');
-	}
-
-
-	//WiFi form submission function disables buttons to avoid conflicts
-	//Then adds the network and enables it
-	//Then tests the connection and updates the upgradeRequired variable and others
+	// Attempts to connect to a network
+	//	after network is added to device, it checks every 3 seconds if there's internet connectivity
+	//	if there is no connectivity for 1 minute, it shows a message
+	// TODO: separate this by MVC
 	var connectToNetwork = function (elementData, ssid, encr, password) {
 		clearWifiMessage(elementData);
 
@@ -584,13 +368,103 @@
 							// enable the Buttons again
 							wifiSubmitButtonEnable(elementData, wifiButtonContent.default);
 							// show an alert
-							showWifiMessage(elementData, 'warning', 'Unable to connect to ' + $('#wifi-ssid').val() + '. Please try again.');
+							showWifiMessage(elementData, 'warning', 'Unable to connect to ' + ssid + '. Please try again.');
 						}, 60000);
 					}
 				});
 			}
 		});
 	};
+
+	/* view manipulation functions */
+	//Used to display error messages in an alert box
+	var showWifiMessage = function (elementData, type, message) {
+		$(elementData.messageField).append($('<div class="alert alert-' + type + ' alert-dismissible fade in" role="alert"> \
+			<button type="button" class="close" data-dismiss="alert" aria-label="Close"> \
+				<span aria-hidden="true">&times;</span> \
+				<span class="sr-only">Close</span> \
+			</button> \
+			' + message + ' \
+		</div>'));
+	};
+
+	var clearWifiMessage = function (elementData) {
+		$(elementData.messageField +' > .alert').alert('close');
+	}
+
+	//Displays the list of networks in the dropdown after a scan
+	var view_setVisibleWifiElements = function (state) {
+		if (state === 'loading') {
+			$('#wifiLoading').show();
+			$('#wifi-connect').hide();
+			$('#wifi-list').hide();
+			$('#networkTable').hide();	// is this required?
+		} else {
+			$('#wifiLoading').hide();
+			if (state === 'addNetwork') {
+				$('#wifi-connect').show();
+
+				$('#wifi-list').hide();
+				$('#networkTable').hide();	// is this required?
+			} else if (state === 'addNetworkOption') {
+				// just like addNetwork, but showing the cancel button
+				view_setVisibleWifiElements('addNetwork');
+				$('#wifiCancelButton').show();
+			} else if (state === 'networkList') {
+				$('#wifi-connect').hide();
+				$('#wifi-list').show();
+				$('#networkTable').show();
+			}
+		}
+	};
+
+	var showScanMessage = function (element, message) {
+		$(element).empty();
+		$(element).append($('<option value="" disabled selected>' + message + '</option>'));
+	};
+
+	var wifiSubmitButtonDisable = function (elementData, buttonContent) {
+		$(elementData.submitButton).prop('disabled', true);
+		// $('#skipStepTestButton').prop('disabled', true);
+		$(elementData.submitButton).html(buttonContent);
+	};
+
+	var wifiSubmitButtonEnable = function (elementData, buttonContent) {
+		$(elementData.submitButton).html(buttonContent);
+		$(elementData.submitButton).prop('disabled', false);
+		// $('#skipStepTestButton').prop('disabled', false);
+		$('#wifi-loading').css('display','none');
+	}
+
+	// returns network object based on dropdown selection
+	var getSelectedNetwork = function (elementData) {
+		var index = $(elementData.dropdown).val();
+		return (availableWifiNetworks[index])
+	};
+
+	// populate network info fields (ssid, password, encryption type)
+	var populateNetworkInfo = function (elementData, ssid, password, encr) {
+		$(elementData.ssidField).val(ssid);
+		$(elementData.passwordField).val('');
+		$(elementData.encryptionField).val(encr);
+	};
+
+	// clear input fields
+	var clearNetworkInfoFields = function (elementData) {
+		populateNetworkInfo(elementData, '', '', 'None');
+	};
+
+ 	/* event handling functions */
+	//On click functions for the scan button
+	$('#wifi-scan-btn').click(function () {
+		scanWifiNetwork(regularWifiScanElements);
+	});
+
+	//Reads the information of the selected network from the dropdown and displays it in fields for the user
+	$('#wifi-select').change(function () {
+		var networkData = getSelectedNetwork(regularWifiScanElements);
+		populateNetworkInfo(regularWifiScanElements, networkData.ssid, '', networkData.encryption);
+	});
 
 	$('#wifi-form').submit(function(e) {
 		e.preventDefault();
@@ -601,226 +475,22 @@
 						);
 	});
 
-
-	// old code
-	/*//WiFi form submission function disables buttons to avoid conflicts
-	//Then adds the network and enables it
-	//Then tests the connection and updates the upgradeRequired variable and others
-	$('#wifi-form').submit(function (e) {
-		e.preventDefault();
-		$('#wifi-message > .alert').alert('close');
-
-		var clearFields = function () {
-			$('#wifi-ssid').val('');
-			$('#wifi-key').val('');
-			$('#wifi-encryption').val('None');
-		};
-
-		var postCheck = function () {
-			// clearInterval(animationInterval);
-			$('#wifi-config-button').html('Configure Wi-Fi');
-			$('#wifi-config-button').prop('disabled', false);
-			// $('#skipStepTestButton').prop('disabled', false);
-			$('#wifi-loading').css('display','none');
-		};
-
-		$('#wifi-config-button').prop('disabled', true);
-		// $('#skipStepTestButton').prop('disabled', true);
-		$('#wifi-config-button').html('Configuring<div id="wifi-loading" class="wifiLoad" style="display: block;">');
-
-		// var animationInterval = setInterval(function () {
-			// var label = $('#wifi-config-button').html();
-			// $('#wifi-config-button').html(label.length < 14 ? label + '.' : 'Configuring');
-		// }, 1000);
-
-		if ($('#wifi-ssid').val() === ''){
-			if (checkOnlineRequest) {
-					checkOnlineRequest.abort();
-					checkOnlineRequest = null;
-				}
-				postCheck();
-				showWifiMessage('danger', 'Please enter an SSID.');
-		}else if ($('#wifi-encryption').val() === 'psk2' || $('#wifi-encryption').val() === 'psk'){
-			if($('#wifi-key').val().length < 8 || $('#wifi-key').val().length > 63){
-				if (checkOnlineRequest) {
-					checkOnlineRequest.abort();
-					checkOnlineRequest = null;
-				}
-				postCheck();
-				showWifiMessage('danger', 'Please enter a valid password. (WPA and WPA2 passwords are between 8 and 63 characters)');
-			}
-		}else if($('#wifi-encryption').val() === 'wep'){
-			if($('#wifi-key').val().length !== 5){
-				if (checkOnlineRequest) {
-					checkOnlineRequest.abort();
-					checkOnlineRequest = null;
-				}
-				postCheck();
-				showWifiMessage('danger', 'Please enter a valid password. (WEP passwords are 5 or 13 characters long)');
-			}else if($('#wifi-key').val().length !== 13){
-				if (checkOnlineRequest) {
-					checkOnlineRequest.abort();
-					checkOnlineRequest = null;
-				}
-				postCheck();
-				showWifiMessage('danger', 'Please enter a valid password. (WEP passwords are 5 or 13 characters long)');
-			}
-		}
-			if(checkOnlineRequest !== null){
-				var connectionCheckInterval = setInterval(function () {
-					isOnline(function () {
-						if (omegaOnline) {
-							clearTimeout(connectionCheckTimeout);
-							clearInterval(connectionCheckInterval);
-
-							console.log("Checking for upgrade");
-							sendUbusRequest('onion', 'oupgrade', {
-								params: {
-									check: ''
-								}
-							}, function (data) {
-								binName = data.result[1].image.local;
-								upgradeRequired = data.result[1].upgrade;
-								fileSize = data.result[1].image.size;
-								$('#download-progress').prop('max', data.result[1].image.size);
-								postCheck();
-								clearFields();
-								gotoStep(nextStep);
-							});
-						}
-					});
-				}, 10000);
-
-				var connectionCheckTimeout = setTimeout(function () {
-					clearInterval(connectionCheckInterval);
-					if (checkOnlineRequest) {
-						checkOnlineRequest.abort();
-						checkOnlineRequest = null;
-					}
-						postCheck();
-						showWifiMessage('warning', 'Unable to connect to ' + $('#wifi-ssid').val() + '. Please try again.');
-				}, 60000);
-
-
-				//Connect to the network
-				setupWifiNetwork($('#wifi-ssid').val(), $('#wifi-key').val(), $('#wifi-encryption').val());
-			}
-	});*/
-
-	$('#wifi-form-modal').submit(function (e) {
-		e.preventDefault();
-		$('#wifi-message > .alert').alert('close');
-
-		var clearFields = function () {
-			$('#wifi-ssid-modal').val('');
-			$('#wifi-key-modal').val('');
-			$('#wifi-encryption-modal').val('None');
-		};
-
-		var postCheck = function () {
-			// clearInterval(animationInterval);
-			$('#wifi-config-button-modal').html('Configure Wi-Fi');
-			$('#wifi-config-button-modal').prop('disabled', false);
-			$('#skipWifiButton').prop('disabled', false);
-			$('#wifi-loading').css('display','none');
-		};
-
-		$('#wifi-config-button-modal').prop('disabled', true);
-		$('#skipWifiButton').prop('disabled', true);
-		$('#wifi-config-button-modal').html('Connecting<div id="wifi-loading" class="wifiLoad">');
-
-		// var animationInterval = setInterval(function () {
-			// var label = $('#wifi-config-button').html();
-			// $('#wifi-config-button').html(label.length < 14 ? label + '.' : 'Configuring');
-		// }, 1000);
-
-
-		//Checks if the ssid is blank and if the password entered is valid for each encryption type
-		if ($('#wifi-ssid-modal').val() === ''){
-			if (checkOnlineRequest) {
-					checkOnlineRequest.abort();
-					checkOnlineRequest = null;
-				}
-				postCheck();
-				showWifiMessageModal('danger', 'Please enter an SSID.');
-		}else if ($('#wifi-encryption-modal').val() === 'psk2' || $('#wifi-encryption-modal').val() === 'psk'){
-			if($('#wifi-key-modal').val().length < 8 || $('#wifi-key-modal').val().length > 63){
-				if (checkOnlineRequest) {
-					checkOnlineRequest.abort();
-					checkOnlineRequest = null;
-				}
-				postCheck();
-				showWifiMessageModal('danger', 'Please enter a valid password. (WPA and WPA2 passwords are between 8 and 63 characters)');
-			}
-
-		}else if($('#wifi-encryption-modal').val() === 'wep'){
-			if($('#wifi-key-modal').val().length !== 5){
-				if (checkOnlineRequest) {
-					checkOnlineRequest.abort();
-					checkOnlineRequest = null;
-				}
-				postCheck();
-				showWifiMessageModal('danger', 'Please enter a valid password. (WEP passwords are 5 or 13 characters long)');
-			}else if($('#wifi-key-modal').val().length !== 13){
-				if (checkOnlineRequest) {
-					checkOnlineRequest.abort();
-					checkOnlineRequest = null;
-				}
-				postCheck();
-				showWifiMessageModal('danger', 'Please enter a valid password. (WEP passwords are 5 or 13 characters long)');
-			}
-		}
-			if(checkOnlineRequest !== null){
-				var connectionCheckInterval = setInterval(function () {
-					isOnline(function () {
-						if (omegaOnline) {
-							clearTimeout(connectionCheckTimeout);
-							clearInterval(connectionCheckInterval);
-
-							console.log("Checking for upgrade");
-							sendUbusRequest('onion', 'oupgrade', {
-								params: {
-									check: ''
-								}
-							}, function (data) {
-								binName = data.result[1].image.local;
-								upgradeRequired = data.result[1].upgrade;
-								fileSize = data.result[1].image.size;
-								$('#download-progress').prop('max', data.result[1].image.size);
-								postCheck();
-								clearFields();
-								$('#wifiModal').modal('hide');
-								gotoStep(nextStep);
-							});
-						// });
-						}
-					});
-				}, 10000);
-
-				var connectionCheckTimeout = setTimeout(function () {
-					clearInterval(connectionCheckInterval);
-					if (checkOnlineRequest) {
-						checkOnlineRequest.abort();
-						checkOnlineRequest = null;
-					}
-						postCheck();
-						showWifiMessage('warning', 'Unable to connect to ' + $('#wifi-ssid').val() + '. Please try again.');
-				}, 60000);
-
-
-				//Connect to the network
-				var params = genUciNetworkParams($('#wifi-ssid-modal').val(), $('#wifi-key-modal').val(), $('#wifi-encryption-modal').val(), false, false);
-				device_addWirelessNetwork(params);
-			}
-
-	});
-
 	$('#skipWifiButton').click(function(){
 			console.log("skipWifiButton gets called");
 			console.log("nextStep in skip TestButton is nextStep",nextStep);
 			console.log(preStep);
 			gotoStep(nextStep);
 
+	});
+
+	$('#addWifiButton').click(function(){
+			console.log("addWifiButton: enabling wifi-connect");
+			view_setVisibleWifiElements('addNetworkOption');
+	});
+
+	$('#wifiCancelButton').click(function(){
+			console.log("wifiCancelButton: enabling wifi-connect");
+			view_setVisibleWifiElements('networkList');
 	});
 
 	// $('#skipStepTestButton').click(function(){
@@ -881,6 +551,32 @@
 	}
 
 	//Refreshes the network list to show most recent network configurations (icons, etc)
+	var populateNetworkList = function (networkList) {
+		if (networkList && Array.isArray(networkList)) {
+			$('div').remove('#network-list');
+			$('#networkTable').append(" <div class='list-group-item layout horizontal end' id='network-list'></div> ");
+			$.each(networkList, function(key, value) {
+				var id = '';
+				var enableButton = "<a class='glyphicons glyphicons-ok' href='#' data-toggle='tooltip' title='Enable Network'></a>";
+				if (value.enabled) {
+					id = 'id=\'connectedNetwork\'';
+					enableButton = '';
+				}
+				var html = `<div class='list-group-item layout horizontal end'><span ${id} class='glyphicons glyphicons-wifi'></span><span>${value.ssid}</span><div id='${value.ssid}'><a class='glyphicons glyphicons-remove' href='#' data-toggle='tooltip' title='Delete Network'></a>${enableButton}</div></div>`;
+				console.log('adding to network list:');
+				console.log(html);
+				$('#network-list').append(html);
+
+				if (($('#network-list > div').length) <= 1) {
+					$('.glyphicons-remove').hide();
+				} else {
+					$('.glyphicons-remove').show();
+				}
+				return;
+			});
+		}
+	}
+
 	var refreshNetworkList = function () {
 		savedWifiNetworks = [];
 		$('div').remove('#network-list');
@@ -926,23 +622,29 @@
 
 	//On click function for the enable network icon (checkmark)
 	$('#networkTable').on('click', '.glyphicons-ok', function() {
-		$('#wifi-list').hide();
-		$('#wifiLoading').show();
-		var index = Number($(this).closest('div').prop('id'));
-		changeNetwork(index, currentNetworkIndex, false, true); //Enable the selected network and update the network list
+		view_setVisibleWifiElements('loading');
+		var selectedSsid = $(this).closest('div').prop('id');
+		console.log('clicked on enable for network ' + selectedSsid);
+
+
+
+		// old code
+		// changeNetwork(index, currentNetworkIndex, false, true); //Enable the selected network and update the network list
 	});
 
 
-	//On click function for the remove network icon (X)
+	// On click function for the remove network icon (X)
 	$('#networkTable').on('click', '.glyphicons-remove', function() {
-		$('#wifi-list').hide();
-		$('#wifiLoading').show();
-		var index = Number($(this).closest('div').prop('id'));
-		if(index === currentNetworkIndex && savedWifiNetworks[index+1]){ //In the case that the deleted network is currently connected and another network is currently configured
-			changeNetwork(index+1, currentNetworkIndex, true, true); // Connect to the next network and flag the current network for deletion
-		} else {
-			deleteNetwork(index);
-		}
+		view_setVisibleWifiElements('loading');
+		var selectedSsid = $(this).closest('div').prop('id');
+		console.log('clicked on delete for index ' + selectedSsid);
+
+		// old code
+		// if(index === currentNetworkIndex && savedWifiNetworks[index+1]){ //In the case that the deleted network is currently connected and another network is currently configured
+		// 	changeNetwork(index+1, currentNetworkIndex, true, true); // Connect to the next network and flag the current network for deletion
+		// } else {
+		// 	deleteNetwork(index);
+		// }
 	});
 
 
@@ -1291,91 +993,97 @@
 			},
 			init: function () {
 				$('[data-toggle="tooltip"]').tooltip();
-				$('#wifi-connect').hide();
-				$('#wifi-list').hide();
-				$('#wifiLoading').show();
+				view_setVisibleWifiElements('loading');
 
 				sendUbusRequest('system', 'info', {}, function (data) {
 					if (data.result && data.result.length === 2) {
-						$('#wifi-ssid').val('');
-						$('#wifi-key').val('');
+						clearNetworkInfoFields(regularWifiScanElements);
 						scanWifiNetwork(regularWifiScanElements);
-						scanWifiNetwork(modalWifiScanElements);
 					} else {
 						gotoStep(preStep);
 					}
 				});
 
-
-				//Check if already connected to internet. If yes, show configured networks; otherwise, show configure wifi page.
+				// check if there are already configured networks
+				device_getConfiguredNetworks(function(err, list) {
+					if (!err && list && list.length > 0) {
+						// there are existing configured networks, show the network list
+						console.log('configured networks: ', list);
+						populateNetworkList(list);
+						view_setVisibleWifiElements('networkList');
+					} else {
+						// no configured networks, show the form to add a network
+						console.log('No configured networks found, error value: ', err);
+						view_setVisibleWifiElements('addNetwork');
+					}
+				})
 				// LAZAR: TODO: this is a fucking disaster
 				//	redo this so it uses the global checkonline function
-				sendUbusRequest('file', 'exec', {
-					command: 'wget',
-					params: ['--spider', 'http://repo.onion.io/omega2/']
-				}, function (data){
-					if (data.result.length === 2 && data.result[1].code === 0) {
-						omegaOnline = true;
-
-						refreshNetworkList();
-						// $('#wifi-connect').hide();
-						// $('#wifiLoading').hide();
-						// $('#wifi-list').show();
-						// $('#networkTable').show();
-						console.log('Already connected to the internet!')
-						sendUbusRequest('onion', 'oupgrade', {
-							params: {
-								check: ''
-							}
-						}, function (data) {
-							binName = data.result[1].image.local;
-							upgradeRequired = data.result[1].upgrade;
-							fileSize = data.result[1].image.size;
-							$('#download-progress').prop('max', data.result[1].image.size);
-							$('#wifi-connect').hide();
-							$('#wifiLoading').hide();
-							$('#wifi-list').show();
-							$('#networkTable').show();
-						});
-					} else {
-						sendUbusRequest('file', 'exec', {
-							command: 'wget',
-							params: ['--spider', 'http://repo.onion.io/omega2/']
-						}, function (data){
-							if (data.result.length === 2 && data.result[1].code === 0) {
-								omegaOnline = true;
-
-								refreshNetworkList();
-								// $('#wifi-connect').hide();
-								// $('#wifiLoading').hide();
-								// $('#wifi-list').show();
-								// $('#networkTable').show();
-								console.log('Already connected to the internet!')
-								// sendUbusRequest('onion', 'oupgrade', {
-								// 	params: {
-								// 		check: ''
-								// 	}
-								// }, function (data) {
-								// 	binName = data.result[1].image.local;
-								// 	upgradeRequired = data.result[1].upgrade;
-								// 	fileSize = data.result[1].image.size;
-								// 	$('#download-progress').prop('max', data.result[1].image.size);
-								// 	$('#wifi-connect').hide();
-								// 	$('#wifiLoading').hide();
-								// 	$('#wifi-list').show();
-								// 	$('#networkTable').show();
-								// });
-							} else {
-								$('#wifiLoading').hide();
-								$('#networkTable').hide();
-								$('#wifi-connect').show();
-							}
-						});
-					}
-				});
+				// sendUbusRequest('file', 'exec', {
+				// 	command: 'wget',
+				// 	params: ['--spider', 'http://repo.onion.io/omega2/']
+				// }, function (data){
+				// 	if (data.result.length === 2 && data.result[1].code === 0) {
+				// 		omegaOnline = true;
+				//
+				// 		refreshNetworkList();
+				// 		// $('#wifi-connect').hide();
+				// 		// $('#wifiLoading').hide();
+				// 		// $('#wifi-list').show();
+				// 		// $('#networkTable').show();
+				// 		console.log('Already connected to the internet!')
+				// 		sendUbusRequest('onion', 'oupgrade', {
+				// 			params: {
+				// 				check: ''
+				// 			}
+				// 		}, function (data) {
+				// 			binName = data.result[1].image.local;
+				// 			upgradeRequired = data.result[1].upgrade;
+				// 			fileSize = data.result[1].image.size;
+				// 			$('#download-progress').prop('max', data.result[1].image.size);
+				// 			$('#wifi-connect').hide();
+				// 			$('#wifiLoading').hide();
+				// 			$('#wifi-list').show();
+				// 			$('#networkTable').show();
+				// 		});
+				// 	} else {
+				// 		sendUbusRequest('file', 'exec', {
+				// 			command: 'wget',
+				// 			params: ['--spider', 'http://repo.onion.io/omega2/']
+				// 		}, function (data){
+				// 			if (data.result.length === 2 && data.result[1].code === 0) {
+				// 				omegaOnline = true;
+				//
+				// 				refreshNetworkList();
+				// 				// $('#wifi-connect').hide();
+				// 				// $('#wifiLoading').hide();
+				// 				// $('#wifi-list').show();
+				// 				// $('#networkTable').show();
+				// 				console.log('Already connected to the internet!')
+				// 				// sendUbusRequest('onion', 'oupgrade', {
+				// 				// 	params: {
+				// 				// 		check: ''
+				// 				// 	}
+				// 				// }, function (data) {
+				// 				// 	binName = data.result[1].image.local;
+				// 				// 	upgradeRequired = data.result[1].upgrade;
+				// 				// 	fileSize = data.result[1].image.size;
+				// 				// 	$('#download-progress').prop('max', data.result[1].image.size);
+				// 				// 	$('#wifi-connect').hide();
+				// 				// 	$('#wifiLoading').hide();
+				// 				// 	$('#wifi-list').show();
+				// 				// 	$('#networkTable').show();
+				// 				// });
+				// 			} else {
+				// 				$('#wifiLoading').hide();
+				// 				$('#networkTable').hide();
+				// 				$('#wifi-connect').show();
+				// 			}
+				// 		});
+				// 	}
+				// });
 
 				//Check to see if you can skip here
-
 				sendUbusRequest('uci','get',{config:"onion",section:"console",option:"setup"},function(response){
 					console.log('uci get onion.console.setup = ', response);
 					// response.result = [0,{}];
