@@ -219,14 +219,13 @@
 
 	// use wifi-setup to add a configured wifi network
 	var device_addWirelessNetwork = function (ssid, auth, password, callback) {
-		// TODO: encode to base64 and enable the option
 		sendUbusRequest('onion', 'wifi-setup', {
 			command: 'add',
-			base64: false,
+			base64: true,
 			params: {
-				ssid: ssid,
-				password: password,
-				encr: auth
+				ssid: btoa(ssid),
+				password: btoa(password),
+				encr: btoa(auth)
 			}
 		}, function (resp) {
 			if (resp.result && typeof(resp.result[0]) !== 'undefined' && resp.result[0] === 0) {
@@ -247,13 +246,12 @@
 	// use wifi-setup to move a network to the highest priority
 	var device_setNetworkHighestPriority = function (ssid, callback) {
 		console.log('giving highest priority to network ' + ssid);
-		// TODO: encode to base64 and enable the option
 		sendUbusRequest('onion', 'wifi-setup', {
 			command: 'priority',
-			base64: false,
+			base64: true,
 			params: {
-				ssid: ssid,
-				move: 'top'
+				ssid: btoa(ssid),
+				move: btoa('top')
 			}
 		}, function (resp) {
 			if (resp.result && typeof(resp.result[0]) !== 'undefined' && resp.result[0] === 0) {
@@ -273,12 +271,11 @@
 
 	// use wifi-setup to remove a network configuration
 	var device_deleteNetwork = function (ssid, callback) {
-		// TODO: encode to base64 and enable the option
 		sendUbusRequest('onion', 'wifi-setup', {
 			command: 'remove',
-			base64: false,
+			base64: true,
 			params: {
-				ssid: ssid
+				ssid: btoa(ssid)
 			}
 		}, function (resp) {
 			if (resp.result && typeof(resp.result[0]) !== 'undefined' && resp.result[0] === 0) {
