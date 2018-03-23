@@ -596,7 +596,7 @@
 	$('#skipWifiButton').click(function(){
 			console.log("skipWifiButton gets called");
 			console.log("nextStep in skip TestButton is nextStep",nextStep);
-			console.log(preStep);
+			console.log("previous step is: ", preStep);
 			gotoStep(nextStep);
 
 	});
@@ -969,6 +969,7 @@
 		{
 			// step 0: welcome screen
 			ready: function(){
+				$('[data-toggle="tooltip"]').tooltip();
 				return false;
 			},
 			init: function(){
@@ -997,7 +998,6 @@
 				return false;
 			},
 			init: function () {
-				$('[data-toggle="tooltip"]').tooltip();
 				view_setVisibleWifiElements('loading');
 
 				sendUbusRequest('system', 'info', {}, function (data) {
@@ -1311,9 +1311,9 @@
 
 
 	var gotoStep = function (step) {
-		// var bSlideLeft = false;
+		var bSlideLeft = false;
 		if(preStep != step){
-			var bSlideLeft = true;
+			bSlideLeft = true;
 		}
 		if (currentStep !== step || ( (currentStep==0) && (step ==0))) {
 			currentStep = step;
@@ -1367,6 +1367,7 @@
 					// 		$(controls[step]).animate({'left':'0px'});
 					// 	});
 					// },100);
+					console.log("going backwards");
 					$(controls[step + 1]).show().removeClass('shiftLeftIn').removeClass('shiftLeftOut').removeClass('shiftRightOut').removeClass('shiftRightIn').addClass('shiftRightOut');
 					setTimeout(function(){
 						$(controls[step + 1]).hide();

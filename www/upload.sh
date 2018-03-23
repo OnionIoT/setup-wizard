@@ -9,4 +9,4 @@ ipAddr="$1"
 
 
 npm run build
-rsync -va dist/bundle.js root@$ipAddr:/www/setup-wizard/bundle.js
+rsync -va dist/bundle.js root@$ipAddr:/www/setup-wizard/js/bundle.js
