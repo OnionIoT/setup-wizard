@@ -54,6 +54,15 @@
 		return request;
 	};
 
+	/* view related functions */
+	var view_showHideElement = function (elementId, bShow) {
+		var value = 'none';
+		if (bShow) {
+			value = 'block'
+		}
+		$(elementId).css('display',value);
+	}
+
 	//======================
 	// Introductory Card
 	//======================
@@ -558,6 +567,11 @@
 		}
 	};
 
+	var view_showHideSkipWifiButton = function (bShow) {
+		var elementId = '#skipWifiButton';
+		view_showHideElement(elementId, bShow);
+	};
+
  	/* event handling functions */
 	//On click functions for the scan button
 	$('#wifi-scan-btn').click(function () {
@@ -766,6 +780,12 @@
 		window.addEventListener("message", receiveDeviceId);
 	}
 
+	/* view related functions */
+	var view_showHideCloudSetupBackButton = function (bShow) {
+		var elementId = '#setupCloudBackButton';
+		view_showHideElement(elementId, bShow);
+	};
+
 	//======================
 	// Step 4: Firmware Update
 	//======================
@@ -781,20 +801,15 @@
 		upgradeRequired = 'false';
 
 	var device_checkForUpgrade = function (callback) {
-		// CODE TO CHECLK FOR NEW FIRMWARE AVAILABILITY:
+		// CODE TO CHECK FOR NEW FIRMWARE AVAILABILITY:
 		console.log("Checking for upgrade");
 		sendUbusRequest('onion', 'oupgrade', {
 			params: {
 				check: ''
 			}
 		}, function (resp) {
-			console.log('oupgrade returned: ', resp);//lazar debug
 			if (resp.result && typeof(resp.result[0]) !== 'undefined' && resp.result[0] === 0) {
-				binName = resp.result[1].image.local;
-				upgradeRequired = resp.result[1].upgrade;
-				fileSize = resp.result[1].image.size;
-				$('#download-progress').prop('max', resp.result[1].image.size);
-				callback(null, null);
+				callback(null, resp.result[1]);
 			} else {
 				callback(true, 'Invalid response from device');
 			}
@@ -825,6 +840,7 @@
 		}
 	};
 
+	/* view manipulation functions */
 	//Updates text on upgrade page based on if upgrade is required or if the console is going to be installed
 	var firmwareText = function () {
 		if($('#consoleInstall').is(':checked') && upgradeRequired === 'true'){
@@ -846,6 +862,12 @@
 		}
 	};
 
+	var view_showHideFirmwareBackButton = function (bShow) {
+		var elementId = '#firmwareBackButton';
+		view_showHideElement(elementId, bShow);
+	};
+
+	/* event handling functions */
 	$('#consoleInstall').click(firmwareText);
 
 	$('#upgradeFirmwareButton').click(function(){
@@ -1011,41 +1033,22 @@
 					if(response.result.length == 2){
 						//Got a valid response, cuz the length is two
 						if(response.result[1].value == "1"){
-							console.log("Skip Buttons should be visible");
+							// console.log("Skip Buttons should be visible");
 							//If value is 1, the setup has been run before and all skip/back buttons except cloud reg are enabled.
-							// $('#skipStepTestButton').css('display','block');
-							$('#skipWifiButton').css('display','block');
-							// $('#skipFirmwareStep').css('display','block');
-							// $('#skipCloudReg').css('display','block');
-							$('#setupCloudBackButton').css('display','block');
-							$('#firmwareBackButton').css('display','block');
-
-
-							//Fuck it while we are at it, lets add the back buttons here too? Or should we always have back buttons?
+							view_showHideSkipWifiButton(true);
+							view_showHideCloudSetupBackButton(true);
+							view_showHideFirmwareBackButton(true);
 						}else{
-							console.log("Skip Buttons are hidden");
-							//If value is 0, the setup has NOT been run before and all skip buttons are disabled except for cloudSetup one.
-							// $('#skipStepTestButton').css('display','none');
-							// $('#skipFirmwareStep').css('display','none');
-							// $('#skipCloudReg').css('display','none');
-							console.log("About to hide the setupCloudBackButton");
-							$('#setupCloudBackButton').css('display','none');
-							console.log("Hiding setupCloudBackButton");
-							$('#firmwareBackButton').css('display','none');
-
+							// console.log("Skip Buttons are hidden");
+							view_showHideSkipWifiButton(false);
+							view_showHideCloudSetupBackButton(false);
+							view_showHideFirmwareBackButton(false);
 						}
 					} else{
-						console.log("Got a wack response from the ubus request, hid all skip buttons");
-						//If there is an error, assume it is a first time setup
-						// $('#skipStepTestButton').css('display','none');
-						// $('#skipFirmwareStep').css('display','none');
-						// $('#skipCloudReg').css('display','none');
-						console.log("About to hide the setupCloudBackButton");
-						$('#setupCloudBackButton').css('display','none');
-						console.log("Hiding setupCloudBackButton");
-						$('#firmwareBackButton').css('display','none');
-
-
+						// console.log("Got a wack response from the ubus request, hid all skip buttons");
+						view_showHideSkipWifiButton(false);
+						view_showHideCloudSetupBackButton(false);
+						view_showHideFirmwareBackButton(false);
 					}
 				});
 			}
@@ -1168,17 +1171,23 @@
 				$('#softwareLoading').show();
 				$('#software-content').hide();
 
-				device_checkForUpgrade(function (err, msg) {
+				device_checkForUpgrade(function (err, data) {
 					$('#softwareLoading').hide();
 					$('#software-content').show();
 
 					if (err) {
-						console.error(msg);
+						console.error(data);
 					} else {
+						binName = data.image.local;
+						upgradeRequired = data.upgrade;
+						fileSize = data.image.size;
+						$('#download-progress').prop('max', data.image.size);
+
 						console.log("upgradeRequired",upgradeRequired);
 						console.log("binDownloaded",binDownloaded);
 						$('#downloading').hide();
 						$('#download-complete').hide();
+
 						firmwareText();
 					}
 				});
@@ -1302,6 +1311,7 @@
 
 
 	var gotoStep = function (step) {
+		// var bSlideLeft = false;
 		if(preStep != step){
 			var bSlideLeft = true;
 		}
