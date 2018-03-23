@@ -392,7 +392,10 @@
 
 									// TODO: maybe here we should show the network list? or maybe we should be checking that the network list was updated first?
 									// advance to the next step
-									gotoStep(nextStep);
+									if (currentStep === stepNames['wifi']) {
+										console.log('advancing to next step: ' + nextStep);
+										gotoStep(nextStep);
+									}
 								}
 							});
 						}, 3000);
@@ -965,6 +968,15 @@
 	var savedWifiNetworks = [];
 	var currentNetworkIndex;
 
+	var stepNames = {
+		"welcome": 0,
+		"login": 1,
+		"wifi": 2,
+		"cloud": 3,
+		"software": 4,
+		"done": 5
+	};
+
 	var steps = [
 		{
 			// step 0: welcome screen
@@ -1194,6 +1206,7 @@
 			}
 		},
 		{
+			// step 5: done
 			ready: function () {
 				return binDownloaded;
 			},
