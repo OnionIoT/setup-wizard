@@ -167,6 +167,12 @@
 		default: 'Configure WiFi',
 		configuring: 'Configuring<div id="wifi-loading" class="wifiLoad" style="display: block;"></div>',
 		waiting: 'Configuring<div id="wifi-loading" class="wifiLoad" style="display: block;"></div><div>Waiting for Omega to connect to network</div>'
+	};
+	var wifiMessageContent = {
+		deviceCommunicationError: 'Something went wrong communicating with the device, please try again',
+		waitingToConnect: "If you were connected to the Omega's WiFi AP, your computer may disconnect during this process. Please make sure you're still connected!",
+		unableToConnect: 'Unable to connect to REPLACE_SSID. Please try again.',
+		networkHasNoInternetAccess: 'Omega successfully connected to REPLACE_SSID, but the internet is not accessible. Connect to a network that has internet access!'
 	}
 
 	///////////////////////////////////
@@ -378,9 +384,11 @@
 						// there was an error trying to use ubus to set wireless network
 						console.error('Error adding wireless network');
 						wifiSubmitButtonEnable(elementData, wifiButtonContent.default);
-						showWifiMessage(elementData, 'warning', 'Something went wrong communicating with the device, please try again');
+						showWifiMessage(elementData, 'warning', wifiMessageContent.deviceCommunicationError);
 					} else {
 						wifiSubmitButtonDisable(elementData, wifiButtonContent.waiting);
+						showWifiMessage(elementData, 'warning', wifiMessageContent.waitingToConnect);
+
 						// wireless network set, check to see if the device is online
 						console.log('addWirelessNetwork was successful, checking for connectivity');
 						var connectionCheckInterval = setInterval(function () {
@@ -390,7 +398,7 @@
 									clearInterval(connectionCheckInterval);
 									console.log('Successfully connected!');
 
-									// TODO: maybe here we should show the network list? or maybe we should be checking that the network list was updated first?
+									// TODO: maybe here we should show the network list?
 									// advance to the next step
 									if (currentStep === stepNames['wifi']) {
 										console.log('advancing to next step: ' + nextStep);
@@ -407,8 +415,28 @@
 
 							// enable the Buttons again
 							wifiSubmitButtonEnable(elementData, wifiButtonContent.default);
-							// show an alert
-							showWifiMessage(elementData, 'warning', 'Unable to connect to ' + ssid + '. Please try again.');
+							// show an alert - based on if connection to network was successful
+							device_getConfiguredNetworks(function (err, list) {
+								if (err) {
+									showWifiMessage(elementData, 'warning', wifiMessageContent.unableToConnect, ssid);
+								} else {
+									// check if selected SSID is in list and is enabled
+									var bSelectedNetworkEnabled = false;
+									for (var i = 0; i < list.length; i++) {
+										if (list[i].ssid === ssid && list[i].enabled === true) {
+											bSelectedNetworkEnabled = true;
+											break;
+										}
+									}
+									if (bSelectedNetworkEnabled) {
+										// network connection was successful but there is no internet access (otherwise connectionCheckInterval would have gone to the next step)
+										showWifiMessage(elementData, 'warning', wifiMessageContent.networkHasNoInternetAccess, ssid);
+									} else {
+										showWifiMessage(elementData, 'warning', wifiMessageContent.unableToConnect, ssid);
+									}
+								}
+							});
+
 						}, 60000);
 					}
 				});
@@ -444,14 +472,9 @@
 		var getNetworkListInterval = setInterval(function () {
 			device_getConfiguredNetworks(function(err, list) {
 				if (!err) {
-					if (list && list.length > 0) {
-						wifiParams.configuredWifiNetworks = list;
-						clearTimeout(getNetworkListTimeout);
-						clearInterval(getNetworkListInterval);
-
-						callback(null, list);
-					}
-					// TODO: maybe add a handler here if the list is empty??
+					clearTimeout(getNetworkListTimeout);
+					clearInterval(getNetworkListInterval);
+					callback(null, list);
 				}
 			});
 		}, 3000);
@@ -461,13 +484,17 @@
 			clearInterval(getNetworkListInterval);
 
 			callback(true, 'Retrieving network list from device timed out. Please refresh the page and try again');
-		}, 30000);
+		}, 60000);
 
 	};
 
 	/* view manipulation functions */
 	//Used to display error messages in an alert box
-	var showWifiMessage = function (elementData, type, message) {
+	var showWifiMessage = function (elementData, type, message, ssid) {
+		clearWifiMessage(elementData);
+		if (ssid) {
+			message = message.replace(/REPLACE_SSID/, ssid);
+		}
 		$(elementData.messageField).append($('<div class="alert alert-' + type + ' alert-dismissible fade in" role="alert"> \
 			<button type="button" class="close" data-dismiss="alert" aria-label="Close"> \
 				<span aria-hidden="true">&times;</span> \
@@ -560,11 +587,13 @@
 				// console.log(html);
 				$('#network-list').append(html);
 
-				if (($('#network-list > div').length) <= 1) {
-					$('.glyphicons-remove').hide();
-				} else {
-					$('.glyphicons-remove').show();
-				}
+				// if there's only one configured network - do not allow it to be removed
+				// lazar@onion.io: there is a use for removing the only network, commenting this out
+				// if (($('#network-list > div').length) <= 1) {
+				// 	$('.glyphicons-remove').hide();
+				// } else {
+				// 	$('.glyphicons-remove').show();
+				// }
 				return;
 			});
 		}
@@ -573,6 +602,19 @@
 	var view_showHideSkipWifiButton = function (bShow) {
 		var elementId = '#skipWifiButton';
 		view_showHideElement(elementId, bShow);
+	};
+
+	// handle view changes based on list of configured network
+	var view_handleConfiguredNetworkListUpdate = function(list) {
+		// TODO: add a check to ensure list is an array
+		if (list && list.length > 0) {
+			// there are existing configured networks, show the network list
+			populateNetworkList(list);
+			view_setVisibleWifiElements('networkList');
+		} else {
+			// no configured networks - show the form to add a network
+			view_setVisibleWifiElements('addNetwork');
+		}
 	};
 
  	/* event handling functions */
@@ -624,12 +666,11 @@
 			if (err) {
 				// TODO: come up with a handler here
 			} else {
-				populateNetworkList(data);
-				view_setVisibleWifiElements('networkList');
+				wifiParams.configuredWifiNetworks = data;
+				view_handleConfiguredNetworkListUpdate(data);
 			}
 		});
 	});
-
 
 	// On click function for the remove network icon (X)
 	$('#networkTable').on('click', '.glyphicons-remove', function() {
@@ -641,8 +682,8 @@
 			if (err) {
 				// TODO: come up with a handler here
 			} else {
-				populateNetworkList(data);
-				view_setVisibleWifiElements('networkList');
+				wifiParams.configuredWifiNetworks = data;
+				view_handleConfiguredNetworkListUpdate(data);
 			}
 		});
 	});
@@ -1023,16 +1064,13 @@
 
 				// check if there are already configured networks
 				device_getConfiguredNetworks(function(err, list) {
-					if (!err && list && list.length > 0) {
-						// there are existing configured networks, show the network list
-						// console.log('configured networks: ', list);
+					if (!err) {
 						wifiParams.configuredWifiNetworks = list;
-						populateNetworkList(list);
-						view_setVisibleWifiElements('networkList');
+						view_handleConfiguredNetworkListUpdate(list);
 					} else {
 						// no configured networks, show the form to add a network
 						console.log('No configured networks found, error value: ', err);
-						view_setVisibleWifiElements('addNetwork');
+						view_handleConfiguredNetworkListUpdate(null);
 					}
 				})
 
