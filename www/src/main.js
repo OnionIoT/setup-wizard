@@ -379,6 +379,7 @@
 				showWifiMessage(elementData, 'danger', msg);
 			} else {
 				// input data is ok, attempt to add network
+				showWifiMessage(elementData, 'warning', wifiMessageContent.waitingToConnect);
 				device_addWirelessNetwork(ssid, encr, password, function (err, msg) {
 					if (err) {
 						// there was an error trying to use ubus to set wireless network
