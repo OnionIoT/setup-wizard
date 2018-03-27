@@ -151,8 +151,10 @@
 		ssidField: '#wifi-ssid',
 		passwordField: '#wifi-key',
 		encryptionField: '#wifi-encryption',
-		submitButton: '#wifi-config-button'
+		submitButton: '#wifi-config-button',
+		cancelButton: '#wifiCancelButton'
 	};
+	// TODO: remove this since modal is no longer used
 	var modalWifiScanElements = {
 		messageField: '#wifi-message-modal',
 		button: '#wifi-scan-btn-modal',
@@ -161,7 +163,8 @@
 		ssidField: '#wifi-ssid-modal',
 		passwordField: '#wifi-key-modal',
 		encryptionField: '#wifi-encryption',		// LAZAR: seems suspicious
-		submitButton: '#wifi-config-button-modal'
+		submitButton: '#wifi-config-button-modal',
+		cancelButton: '#wifiCancelButton'
 	};
 	var wifiButtonContent = {
 		default: 'Configure WiFi',
@@ -542,6 +545,7 @@
 
 	var wifiSubmitButtonDisable = function (elementData, buttonContent) {
 		$(elementData.submitButton).prop('disabled', true);
+		$(elementData.cancelButton).prop('disabled', true);
 		// $('#skipStepTestButton').prop('disabled', true);
 		$(elementData.submitButton).html(buttonContent);
 	};
@@ -549,6 +553,7 @@
 	var wifiSubmitButtonEnable = function (elementData, buttonContent) {
 		$(elementData.submitButton).html(buttonContent);
 		$(elementData.submitButton).prop('disabled', false);
+		$(elementData.cancelButton).prop('disabled', false);
 		// $('#skipStepTestButton').prop('disabled', false);
 		$('#wifi-loading').css('display','none');
 	}
